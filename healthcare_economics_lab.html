@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="glean-artifact-type" content="dashboards">
+<title>Healthcare Economics Lab</title>
+<style>
+:root {
+  --artifact-background: #ffffff;
+  --artifact-background-light: #f1f3f6;
+  --artifact-background-mid: #e9ecf1;
+  --artifact-border-light: #e3e6ec;
+  --artifact-border-dark: #cdd2db;
+  --artifact-primary-brand: #3559e6;
+  --artifact-primary-highlight: #0d0f14;
+  --artifact-primary-hover: #2442b8;
+  --artifact-selected: #eaeefc;
+  --artifact-text-primary: #11141a;
+  --artifact-text-secondary: #5c6470;
+  --artifact-text-highlight: #e8eefc;
+  --artifact-positive-background: #e8f6ee;
+  --artifact-positive-text: #11141a;
+  --artifact-positive: #159a6a;
+  --artifact-negative: #dc4c4c;
+  --artifact-payer: #3559e6;
+  --artifact-provider: #159a6a;
+  --artifact-life: #9a65bd;
+  --artifact-white: #ffffff;
+  --artifact-warning: #b56d1a;
+}
+html[data-theme='dark'] {
+  --artifact-background: #0a0b0e;
+  --artifact-background-light: #121419;
+  --artifact-background-mid: #181b22;
+  --artifact-border-light: #23262e;
+  --artifact-border-dark: #343844;
+  --artifact-primary-brand: #6a92ff;
+  --artifact-primary-highlight: #f5f7fb;
+  --artifact-primary-hover: #88a8ff;
+  --artifact-selected: #1a2030;
+  --artifact-text-primary: #eef0f4;
+  --artifact-text-secondary: #9aa0ad;
+  --artifact-text-highlight: #14213d;
+  --artifact-positive-background: #0e2a1d;
+  --artifact-positive-text: #c8f5da;
+  --artifact-positive: #46d39a;
+  --artifact-negative: #ff6b6b;
+  --artifact-payer: #6a92ff;
+  --artifact-provider: #46d39a;
+  --artifact-life: #cb9aff;
+  --artifact-white: #0a0b0e;
+  --artifact-warning: #ffc27b;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--artifact-background); color: var(--artifact-text-primary); font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.55; letter-spacing: -.005em; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+a { color: var(--artifact-primary-brand); }
+.shell { max-width: 1160px; margin: 0 auto; padding: 0 30px 80px; }
+.topbar { position: sticky; top: 0; z-index: 20; background: var(--artifact-background); color: var(--artifact-text-primary); border-bottom: 1px solid var(--artifact-border-light); }
+.topbar-inner { max-width: 1160px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 64px; padding: 0 30px; }
+.brand { display:flex; align-items:center; gap:10px; font-weight: 650; letter-spacing: -.03em; white-space: nowrap; }
+.brand-mark { width: 22px; height: 22px; border: 5px solid var(--artifact-primary-brand); border-radius: 50%; display: inline-block; }
+.toplinks { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.toplinks a, .linkbtn { color: var(--artifact-text-secondary); text-decoration: none; font-size: 13px; background: transparent; border: 0; padding: 7px 0; }
+.toplinks a:hover, .linkbtn:hover { color: var(--artifact-primary-brand); }
+.hero { padding: 60px 0 38px; border-bottom: 1px solid var(--artifact-border-light); }
+.eyebrow, .field-label, th, .tag { font-family: "SF Mono", "Cascadia Code", Consolas, monospace; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--artifact-text-secondary); }
+h1, h2, h3 { color: var(--artifact-text-primary); letter-spacing: -.025em; line-height: 1.1; margin: 0; }
+h1 { font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 300; max-width: 850px; margin: 16px 0; }
+h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 400; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+.hero p { max-width: 730px; font-size: 18px; color: var(--artifact-text-secondary); margin: 0 0 22px; }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge { border: 1px solid var(--artifact-border-dark); border-radius: 999px; padding: 5px 10px; font-size: 12px; color: var(--artifact-text-secondary); }
+.badge.strong { color: var(--artifact-primary-brand); border-color: var(--artifact-primary-brand); }
+.section { padding-top: 54px; }
+.section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom: 24px; }
+.section-head p { color: var(--artifact-text-secondary); max-width: 650px; margin: 7px 0 0; }
+.small { color: var(--artifact-text-secondary); font-size: 13px; }
+.scenario-grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.scenario { text-align:left; border:1px solid var(--artifact-border-light); background:var(--artifact-background); color:var(--artifact-text-primary); border-radius:7px; padding:16px; min-height:105px; transition: border-color .15s, background .15s; }
+.scenario:hover { border-color: var(--artifact-primary-brand); }
+.scenario.active { border-color: var(--artifact-primary-brand); background:var(--artifact-selected); color:var(--artifact-text-primary); }
+.scenario b { display:block; font-size:14px; line-height:1.25; }
+.scenario span { display:block; font-size:12px; line-height:1.35; color:var(--artifact-text-secondary); margin-top:8px; }
+.focusband { display:flex; justify-content:space-between; gap:20px; align-items:center; background:var(--artifact-text-highlight); color:var(--artifact-text-primary); border-radius:7px; padding:21px 24px; margin-top:16px; }
+.focusband b { font-weight:600; }
+.focusband p { margin:5px 0 0; font-size:13px; max-width:700px; }
+.primary-button { border:1px solid var(--artifact-primary-brand); color:var(--artifact-background); background:var(--artifact-primary-brand); border-radius:5px; padding:10px 14px; white-space:nowrap; font-size:13px; font-weight:600; }
+.primary-button:hover { background:var(--artifact-primary-hover); border-color:var(--artifact-primary-hover); }
+.layout { display:block; }
+.outcome-strip { position:sticky; top:64px; z-index:15; background:var(--artifact-background); padding:10px 0 12px; border-bottom:1px solid var(--artifact-border-light); }
+.controls { margin-top:20px; color:var(--artifact-text-primary); }
+#controlGroups { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; align-items:start; }
+.control-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:16px; }
+.control-group { padding:18px; border:1px solid var(--artifact-border-light); border-radius:7px; background:var(--artifact-background); min-width:0; }
+.control-group h3 { font-size:14px; margin-bottom:8px; }
+.control-group .group-note { font-size:12px; color:var(--artifact-text-secondary); margin:0 0 8px; }
+.control { padding:12px 0; }
+.control-title { display:flex; align-items:center; justify-content:space-between; gap:10px; line-height:1.3; font-size:13px; }
+.control-title label { cursor:pointer; font-weight:550; }
+.control-value { font-family:Consolas, monospace; font-size:13px; font-weight:650; white-space:nowrap; color:var(--artifact-primary-brand); }
+.control input[type=range] { width:100%; accent-color:var(--artifact-primary-brand); margin:12px 0 2px; }
+.range-line { display:flex; justify-content:space-between; font-size:11px; color:var(--artifact-text-secondary); }
+.benchmark { color:var(--artifact-text-secondary); font-size:11px; line-height:1.4; margin-top:4px; }
+.select-row { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; padding:8px 0; }
+.select-row select { border:1px solid var(--artifact-border-dark); border-radius:4px; padding:7px 9px; color:var(--artifact-text-primary); background:var(--artifact-background); }
+.rightcol { min-width:0; margin-top:20px; }
+.kpi-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.kpi { padding:20px; background:var(--artifact-background-light); color:var(--artifact-text-primary); border:1px solid var(--artifact-border-light); border-radius:7px; min-height:168px; }
+.kpi.payer { border-top:3px solid var(--artifact-payer); }.kpi.provider { border-top:3px solid var(--artifact-provider); }.kpi.life { border-top:3px solid var(--artifact-life); }
+.kpi-label { font-size:12px; color:var(--artifact-text-secondary); font-weight:600; }
+.kpi-value { font-size:clamp(1.8rem,2.5vw,2.8rem); letter-spacing:-.04em; line-height:1.15; font-weight:350; margin:13px 0 7px; font-variant-numeric:tabular-nums; }
+.delta { font-size:12px; font-weight:600; }
+.delta.pos { color:var(--artifact-positive); }.delta.neg { color:var(--artifact-negative); }.delta.neutral { color:var(--artifact-text-secondary); }
+.kpi-foot { font-size:11px; margin-top:9px; color:var(--artifact-text-secondary); }
+.panel { border:1px solid var(--artifact-border-light); border-radius:7px; background:var(--artifact-background); color:var(--artifact-text-primary); padding:22px; margin-top:14px; }
+.panel-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:15px; }
+.panel-head h3 { font-size:17px; }
+.player-row { display:grid; grid-template-columns:130px 1fr 90px; align-items:center; gap:12px; margin:13px 0; font-size:13px; }
+.player-row .bartrack { height:12px; border-radius:10px; background:var(--artifact-background-mid); color:var(--artifact-text-primary); overflow:hidden; }
+.bar { height:100%; border-radius:10px; min-width:2px; }.bar.payer { background:var(--artifact-payer); }.bar.provider { background:var(--artifact-provider); }.bar.life { background:var(--artifact-life); }
+.player-row .num { text-align:right; font-variant-numeric:tabular-nums; }
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { text-align:left; padding:10px 9px; border-bottom:1px solid var(--artifact-border-dark); white-space:nowrap; }
+td { padding:11px 9px; border-bottom:1px solid var(--artifact-border-light); vertical-align:top; }
+td.numeric, th.numeric { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+tr:last-child td { border-bottom:0; }
+.insight { margin-top:15px; padding:16px 18px; background:var(--artifact-text-highlight); color:var(--artifact-text-primary); border-radius:5px; font-size:13px; }
+.insight b { display:block; margin-bottom:4px; }
+.insight p { margin:0; }
+.metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.mini { padding:16px 0; border-top:1px solid var(--artifact-border-light); }
+.mini strong { display:block; font-size:24px; line-height:1.15; font-weight:400; font-variant-numeric:tabular-nums; margin:5px 0; }
+.mini span { font-size:12px; color:var(--artifact-text-secondary); }
+.flag { color:var(--artifact-warning); font-weight:600; }
+.method { border-top:1px solid var(--artifact-border-light); padding-top:42px; margin-top:60px; }
+.method-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px; margin-top:22px; }
+.method-card { border-top:1px solid var(--artifact-border-dark); padding-top:16px; font-size:13px; color:var(--artifact-text-secondary); }
+.method-card h3 { margin-bottom:8px; }
+.method-card code { color:var(--artifact-text-primary); font-size:12px; white-space:normal; }
+.sources { border:1px solid var(--artifact-border-light); padding:22px; border-radius:7px; margin-top:26px; background:var(--artifact-background); color:var(--artifact-text-primary); }
+.sources[hidden] { display:none; }
+.sources ul { padding-left:20px; margin:12px 0 0; }
+.sources li { margin:8px 0; font-size:13px; }
+.source-note { font-size:13px; color:var(--artifact-text-secondary); }
+.tooltip { position:relative; display:inline-flex; margin-left:5px; vertical-align:middle; }
+.info { border:0; background:transparent; color:var(--artifact-text-secondary); font-size:12px; padding:1px 3px; line-height:1; cursor:help; }
+.tooltiptext { position:absolute; bottom:calc(100% + 7px); left:50%; transform:translateX(-50%); width:min(260px,75vw); padding:9px 10px; background:var(--artifact-text-primary); color:var(--artifact-background); border-radius:4px; line-height:1.4; font-size:11px; font-weight:400; text-align:left; box-shadow:none; opacity:0; pointer-events:none; z-index:15; text-transform:none; letter-spacing:normal; }
+.tooltip:hover .tooltiptext, .info:focus + .tooltiptext { opacity:1; }
+footer { padding:26px 0; border-top:1px solid var(--artifact-border-light); margin-top:36px; font-size:12px; color:var(--artifact-text-secondary); }
+@media (max-width: 980px) { .scenario-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } #controlGroups { grid-template-columns:1fr; } }
+@media (max-width: 680px) { .shell { padding:0 18px 50px; }.topbar-inner { padding:0 18px; }.toplinks { gap:10px; }.toplinks a { display:none; }.hero { padding:38px 0 25px; }.scenario-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.focusband { display:block; }.focusband button { margin-top:12px; }.outcome-strip { padding:5px 0 8px; }.kpi-grid { gap:5px; }.kpi { padding:8px; min-height:116px; }.kpi-label { font-size:10px; line-height:1.15; }.kpi-value { font-size:clamp(1rem,4vw,1.4rem); margin:8px 0 5px; }.delta { font-size:10px; }.kpi-foot { display:none; }.metrics, .method-grid { grid-template-columns:1fr; }.player-row { grid-template-columns:90px 1fr 70px; gap:7px; } }
+@media print {
+  body { margin:0; padding:0.4in 0.6in; background:#fff; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .shell, main { max-width:100% !important; width:100% !important; }
+  [style*="position:sticky"], [style*="position: sticky"], .topbar { position:static !important; }
+  section, .section, .hero { break-inside:avoid; margin-bottom:20px !important; }
+  .kpi, .panel, .scenario { break-inside:avoid; padding:18px !important; box-shadow:none !important; border:1px solid rgba(0,0,0,.08); }
+  .outcome-strip { position:static !important; padding:0 !important; border:0 !important; }
+  .scenario-grid, .kpi-grid, .metrics, .method-grid { gap:10px !important; margin-bottom:20px !important; }
+  table, thead { break-inside:avoid; }
+  .toplinks, .controls, .scenario-grid, .focusband button, .interactive-only { display:none !important; }
+  .layout { display:block; }
+  .sources[hidden] { display:block !important; }
+  .tooltiptext { display:none !important; }
+  button, [role="button"] { display:none !important; }
+  *, *::before, *::after { animation:none !important; transition:none !important; }
+  @page { size: auto !important; }
+}
+</style>
+</head>
+<body>
+<div class="topbar" data-glean-id="navigation"><div class="topbar-inner"><div class="brand"><span class="brand-mark" aria-hidden="true"></span> HEALTHCARE ECONOMICS LAB</div><div class="toplinks"><a href="#scenarios">Scenarios</a><a href="#model">Model</a><a href="#outcomes">Outcomes</a><button type="button" class="linkbtn" id="sourceToggle" aria-expanded="false" aria-controls="sourcesPanel">Sources &amp; assumptions ↗</button></div></div></div>
+<main class="shell">
+<section class="hero" data-glean-id="hero"><div class="eyebrow">EDUCATIONAL ECOSYSTEM SIMULATOR / U.S. MODEL</div><h1>One decision.<br>Three balance sheets.</h1><p>Explore how payer, provider, and life-sciences choices change operating economics, patient access, and the distribution of value across the system. Adjust the levers, then follow the transfers.</p><div class="badges"><span class="badge strong">Synthetic 100k-member market</span><span class="badge">Annual steady state</span><span class="badge">Not a forecast</span><span class="badge">2026 rule anchors</span></div></section>
+<section id="scenarios" class="section" data-glean-id="scenarios"><div class="section-head"><div><div class="eyebrow">01 / CHOOSE A DECISION</div><h2>Start with a scenario</h2><p>Preset levers show directional trade-offs. Every input remains editable after a scenario is selected.</p></div></div><div class="scenario-grid" id="scenarioGrid"></div><div class="focusband" data-glean-id="scenario-narrative"><div><b id="scenarioTitle">Baseline market</b><p id="scenarioDescription">A reference point for comparing changes to referral flow, contracts, pharmacy economics, and care management.</p></div><button class="primary-button" type="button" id="resetBtn">Reset baseline</button></div></section>
+<section id="model" class="section" data-glean-id="model"><div class="section-head"><div><div class="eyebrow">02 / ADJUST THE SYSTEM</div><h2>Move a lever. Watch it propagate.</h2><p>Blue guidance marks sourced thresholds; other starting values and slider bounds are clearly labeled illustrative. The modeled pathways are a subset of total medical spend.</p></div></div><div class="layout"><div class="outcome-strip" data-glean-id="live-outcomes" aria-label="Live operating results"><div class="kpi-grid" id="kpiGrid" aria-live="polite"></div></div><aside class="controls" data-glean-id="controls"><div class="control-head"><h3>Model inputs</h3><span class="small">Annual units unless noted</span></div><div id="controlGroups"></div></aside><div class="rightcol"><div class="panel" data-glean-id="operating-results"><div class="panel-head"><h3>Operating result by player</h3><span class="small">$M, annual • scenario vs baseline</span></div><div id="playerBars"></div><div class="insight" id="dynamicInsight"></div></div><div class="panel" data-glean-id="cross-system-effects"><div class="panel-head"><h3>Where the impact lands</h3><span class="small">Changes vs baseline</span></div><div class="metrics" id="systemMetrics"></div></div></div></div></section>
+<section id="outcomes" class="section" data-glean-id="outcomes"><div class="section-head"><div><div class="eyebrow">03 / READ THE CONSEQUENCES</div><h2>Outcome ledger</h2><p>View each actor's objective, transfer, and constraint. Positive profit for one player is not necessarily a net system saving.</p></div></div><div class="panel" data-glean-id="actor-ledger"><div class="panel-head"><h3>Player P&amp;L and guardrails</h3><span class="small">Synthetic annual market</span></div><div class="table-wrap"><table><thead><tr><th>Actor</th><th class="numeric">Revenue</th><th class="numeric">Cost</th><th class="numeric">Result</th><th class="numeric">Margin</th><th>Decision signal</th></tr></thead><tbody id="ledgerBody"></tbody></table></div></div><div class="panel" data-glean-id="transfers"><div class="panel-head"><h3>Transaction-level bridge</h3><span class="small">Delta to baseline • no double counting</span></div><div class="table-wrap"><table><thead><tr><th>Mechanism</th><th class="numeric">Annual delta</th><th>Economic interpretation</th></tr></thead><tbody id="bridgeBody"></tbody></table></div></div><div class="panel" data-glean-id="leaders-guide"><div class="panel-head"><h3>What each leader might do next</h3><span class="small">Illustrative choices, not recommendations</span></div><div id="recommendations"></div></div></section>
+<section class="method" data-glean-id="methodology"><div class="eyebrow">MODEL NOTES</div><h2>Transparent by design</h2><div class="method-grid"><div class="method-card" data-glean-id="method-payer"><h3>Payer</h3><p><code>Premium − incurred claims − admin − quality investment − illustrative MLR floor adjustment</code>.</p><p>Baseline medical PMPM already includes the modeled provider and drug pathways. Only their <em>changes</em> are added, avoiding double counting.</p></div><div class="method-card" data-glean-id="method-provider"><h3>Provider</h3><p><code>Completed cases × allowed rate × collection yield − variable cost − fixed cost + platform savings − transition cost</code>.</p><p>Completed cases are limited by capacity. A payer-rate change is a provider receipt and payer expense, not a system-wide gain.</p></div><div class="method-card" data-glean-id="method-life"><h3>Life sciences</h3><p><code>Treated × units × list price × (1 − rebate) − COGS − operating investment</code>.</p><p>A separate Phase I asset value uses probability-weighted illustrative future contribution, not current product earnings.</p></div></div><p class="small">Scope limits: one synthetic payer product, one provider pathway, one marketed drug, one Phase I asset; no actual contracts, tax, risk adjustment, provider payer mix, PBM fees, claims runout, discounting of future cash flows, clinical efficacy curve, vendor-side P&amp;L, or patient-level advice. The MLR adjustment is a teaching proxy, not a statutory filing calculation. Drug rebate is modeled as 100% passed to this payer; real contracts vary.</p><div class="sources" id="sourcesPanel" hidden data-glean-id="sources"><h3>Sources &amp; assumption register</h3><p class="source-note">The displayed results are calculated locally from synthetic inputs. Regulatory and benchmark callouts below are external anchors; most slider starting values and ranges are illustrative teaching assumptions, not estimates for an actual payer, hospital, or medicine. No live data is fetched.</p><ul><li><a href="https://www.cms.gov/medicare/health-drug-plans/medical-loss-ratio" target="_blank" rel="noopener">CMS, Medical Loss Ratio</a> — MA/Part D floor of 85%; reviewed October 2026.</li><li><a href="https://www.congress.gov/crs-product/R42735" target="_blank" rel="noopener">Congressional Research Service, Medical Loss Ratio</a> — ACA commercial floors of 80% individual/small group and 85% large group; reviewed October 2026.</li><li><a href="https://www.medpac.gov/wp-content/uploads/2026/03/Mar26_Ch3_MedPAC_Report_To_Congress_SEC.pdf" target="_blank" rel="noopener">MedPAC, March 2026 hospital report</a> — FY2024 hospital all-payer operating margin 6.5%, not a target for this synthetic provider pathway.</li><li><a href="https://go.bio.org/rs/490-EHZ-999/images/ClinicalDevelopmentSuccessRates2011_2020.pdf" target="_blank" rel="noopener">BIO / Informa / QLS, 2021</a> — 7.9% Phase I-to-approval likelihood across 2011–2020 development programs; historical and indication-dependent.</li><li><a href="https://www.cbo.gov/system/files/2025-09/60661-340B-program.pdf" target="_blank" rel="noopener">CBO, 2025 340B report</a> — drug-channel transfer economics; 340B is discussed but not simulated in the v1.</li><li><a href="https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/nhe-fact-sheet" target="_blank" rel="noopener">CMS National Health Expenditure</a> — broad system-spending context; not used as a local input default.</li></ul><p class="source-note">Algorithm: deterministic annual P&amp;L with event-volume changes and cross-ledger cash transfers. Baseline inputs are illustrative and held constant for scenario deltas. No causal inference or actuarial validation is claimed.</p></div></section>
+<footer data-glean-id="footer">Educational prototype • Synthetic inputs • Not for pricing, clinical, regulatory, or investment decisions without organization-specific calibration and expert review.</footer>
+</main>
+<script>
+(function(){
+'use strict';
+const BASE={members:100000,premium:650,medical:550,admin:65,quality:5,referrals:12000,conversion:65,capacity:10000,allowed:2200,patientShare:20,collection:90,variableCost:1500,fixedCost:4,treated:2000,units:12,drugPrice:500,rebate:25,drugCOGS:90,drugFixed:4,avoided:600,efficacy:50,careReduction:0,careProgram:0,platformSavings:0,transitionCost:0,approval:7.9,trialSpend:8,futureValue:150};
+const state={...BASE}; let mlrFloor=85; let activeScenario='baseline';
+const fmtMoney=(v,d=1)=>(v<0?'−':'')+'$'+(Math.abs(v)/1e6).toFixed(d)+'M';
+const fmtSigned=(v,d=1)=>(v>=0?'+':'')+fmtMoney(v,d);
+const fmtPct=v=>v.toFixed(1)+'%';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const info=(text)=>'<span class="tooltip"><button type="button" class="info" aria-label="How this is calculated">ⓘ</button><span class="tooltiptext">'+esc(text)+'</span></span>';
+const groups=[
+ {name:'Market & payer',note:'Premium and PMPM costs are illustrative; MLR floor is sourced.',fields:[
+  ['members','Covered members',50000,200000,10000,'number','Synthetic scale; member-months = members × 12.'],
+  ['premium','Premium PMPM',400,950,10,'usd','Illustrative, not a regional premium benchmark.'],
+  ['medical','Base medical PMPM',300,800,10,'usd','Illustrative incurred claims baseline, already including modeled care and drug pathways.'],
+  ['admin','Admin PMPM',25,120,5,'usd','Illustrative payer operating expense; separate from quality investment.'],
+  ['quality','Quality spend PMPM',0,20,1,'usd','Illustrative simplified MLR numerator item.'],
+  ['careReduction','Other-claims reduction',0,5,.25,'pct','Illustrative care-management effect on claims outside modeled provider/drug pathways.'],
+  ['careProgram','Program cost / year',0,10,.25,'million','Illustrative extra payer operating cost in $M.']
+ ]},
+ {name:'Provider access & unit economics',note:'6.5% is a national FY2024 all-payer margin anchor, not a referral-pathway target (MedPAC).',fields:[
+  ['referrals','Annual referrals',6000,22000,500,'number','Illustrative demand per 100k members; scales with market size.'],
+  ['conversion','Referral completion',35,95,1,'pct','Illustrative fraction of referrals completed before capacity limit.'],
+  ['capacity','Annual case capacity',5000,18000,500,'number','Illustrative available specialist slots per 100k members.'],
+  ['allowed','Allowed amount / case',1200,4000,50,'usd','Illustrative payer+patient contract allowed rate, not hospital charges.'],
+  ['patientShare','Patient cost share',0,40,1,'pct','Illustrative share of allowed amount owed by patient; payer share is remainder.'],
+  ['collection','Patient collection',60,100,1,'pct','Illustrative patient balance realized by provider.'],
+  ['variableCost','Variable cost / case',800,2800,50,'usd','Illustrative incremental care cost.'],
+  ['fixedCost','Fixed cost / year',2,10,.25,'million','Illustrative pathway fixed/step-fixed operating cost in $M.'],
+  ['platformSavings','Platform run-rate savings',0,4,.25,'million','Illustrative provider technology/vendor spend eliminated annually, in $M; excludes any vendor revenue ledger.'],
+  ['transitionCost','Transition cost / year',0,4,.25,'million','Illustrative annualized migration, parallel-run, governance and training cost in $M.']
+ ]},
+ {name:'Life sciences & treatment',note:'7.9% Phase I-to-approval anchor reflects BIO 2011–2020 programs; other defaults are synthetic.',fields:[
+  ['treated','Treated patients / year',500,6000,100,'number','Illustrative prevalent patients per 100k members; scales with market size.'],
+  ['units','Units / patient',4,24,1,'number','Illustrative annual units dispensed per treated patient.'],
+  ['drugPrice','List price / unit',100,1500,25,'usd','Illustrative price before rebates; not manufacturer net revenue.'],
+  ['rebate','Manufacturer rebate',0,45,1,'pct','Illustrative gross-to-net deduction, fully passed to modeled payer.'],
+  ['drugCOGS','COGS / unit',20,400,10,'usd','Illustrative manufacturer cost of goods per unit.'],
+  ['drugFixed','Commercial & postmarket / year',1,12,.25,'million','Illustrative annual product operating investment in $M.'],
+  ['avoided','Avoidable medical cost / effective patient',0,4000,100,'usd','Illustrative annual medical cost offset versus usual care; not a clinical claim.'],
+  ['efficacy','Patients benefiting',0,100,5,'pct','Illustrative fraction of treated patients realizing the modeled avoided cost.'],
+  ['approval','Phase I → approval probability',1,25,.1,'pct','Historical cross-program benchmark: 7.9% in BIO 2011–2020; not a product-specific forecast.'],
+  ['trialSpend','Remaining trial investment',0,40,1,'million','Illustrative remaining development commitment in $M.'],
+  ['futureValue','Future product contribution if approved',20,400,5,'million','Illustrative undiscounted product contribution in $M, not observed market value.']
+ ]}
+];
+const scenarios=[
+ {id:'baseline',name:'Baseline market',sub:'Reference economics',desc:'A reference point for comparing changes to referral flow, contracts, pharmacy economics, and care management.',patch:{}},
+ {id:'referral',name:'Referral recovery',sub:'Access + throughput',desc:'A provider raises referral completion and capacity, but pays for more slots. The payer sees more claims for completed care; patient access improves.',patch:{conversion:80,capacity:11500,fixedCost:4.75,careProgram:0.2}},
+ {id:'contract',name:'Payer rate reset',sub:'Transfer, not savings',desc:'A 7% lower allowed rate shifts dollars from provider to payer. The model makes the margin trade-off visible rather than calling it system savings.',patch:{allowed:2050}},
+ {id:'therapy',name:'Therapy access',sub:'Drug + avoided care',desc:'More patients receive a modeled therapy, with a higher rebate and larger health-related medical offset. Test whether net cost and access justify the trade-off.',patch:{treated:3500,rebate:32,avoided:1200,efficacy:65,drugFixed:4.5}},
+ {id:'management',name:'Care management',sub:'Claims vs friction',desc:'A payer invests in care management and reduces other claims. Compare savings against program cost; the simplified model does not claim that all utilization reduction is clinically safe.',patch:{careReduction:2,careProgram:4,admin:68,conversion:62}},
+ {id:'platform',name:'Platform cost takeout',sub:'Run rate vs transition',desc:'The provider exits legacy technology spend, but incurs migration and parallel-run cost. Vendor revenue loss is outside the three modeled ledgers; no clinical benefit is assumed.',patch:{platformSavings:1.5,transitionCost:.6}}
+];
+const $=id=>document.getElementById(id);
+function display(v,kind){if(kind==='pct') return fmtPct(v);if(kind==='million') return '$'+v.toFixed(2)+'M';if(kind==='usd') return '$'+Math.round(v).toLocaleString();return Math.round(v).toLocaleString();}
+function makeControls(){
+ $('controlGroups').innerHTML=groups.map(g=>'<div class="control-group" data-glean-id="inputs-'+esc(g.name.toLowerCase().replace(/[^a-z]+/g,'-'))+'"><h3>'+esc(g.name)+'</h3><p class="group-note">'+esc(g.note)+'</p>'+g.fields.map(f=>'<div class="control" data-glean-id="input-'+f[0]+'"><div class="control-title"><label for="'+f[0]+'">'+esc(f[1])+info(f[6])+'</label><span class="control-value" id="value-'+f[0]+'"></span></div><input aria-label="'+esc(f[1])+'" id="'+f[0]+'" type="range" min="'+f[2]+'" max="'+f[3]+'" step="'+f[4]+'"><div class="range-line"><span>'+display(f[2],f[5])+'</span><span>'+display(f[3],f[5])+'</span></div><div class="benchmark">'+(f[0]==='approval'?'Historical anchor 7.9% · BIO 2011–2020':f[0]==='conversion'?'Illustrative range · no universal referral benchmark':f[0]==='medical'?'Illustrative baseline · includes modeled pathways':'Illustrative starting point / range')+'</div></div>').join('')+'</div>').join('');
+ const first=$('controlGroups').querySelector('.control-group');first.insertAdjacentHTML('beforeend','<div class="select-row" data-glean-id="input-mlr"><span>MLR rule '+info('CMS/CRS: MA/Part D and large-group commercial 85%; individual/small-group commercial 80%. The adjustment below is a simplified teaching proxy, not a statutory MLR calculation.')+'</span><select id="mlrFloor"><option value="85">85% MA / large group</option><option value="80">80% individual / small group</option></select></div>');
+ groups.flatMap(g=>g.fields).forEach(f=>{const el=$(f[0]);el.addEventListener('input',()=>{state[f[0]]=+el.value;activeScenario='custom';renderAll();});});
+ $('mlrFloor').addEventListener('change',e=>{mlrFloor=+e.target.value;activeScenario='custom';renderAll();});
+}
+function calc(x){
+ const scale=x.members/100000, mm=x.members*12;
+ const ref=x.referrals*scale,cap=x.capacity*scale,completed=Math.min(ref*x.conversion/100,cap);
+ const payerShare=1-x.patientShare/100, patientShare=x.patientShare/100;
+ const providerPayer=completed*x.allowed*payerShare;
+ const providerPatient=completed*x.allowed*patientShare*x.collection/100;
+ const providerRev=providerPayer+providerPatient;
+ const providerCost=completed*x.variableCost+(x.fixedCost-x.platformSavings+x.transitionCost)*1e6;
+ const treated=x.treated*scale, units=treated*x.units;
+ const grossDrug=units*x.drugPrice, drugRebate=grossDrug*x.rebate/100;
+ const drugPayer=grossDrug*payerShare-drugRebate;
+ const drugPatient=grossDrug*patientShare;
+ const drugNet=grossDrug-drugRebate;
+ const drugCost=units*x.drugCOGS+x.drugFixed*1e6;
+ const baseScale=BASE.members/100000;
+ const baseRef=BASE.referrals*scale, baseComp=Math.min(baseRef*BASE.conversion/100,BASE.capacity*scale);
+ const baseProviderPayer=baseComp*BASE.allowed*(1-BASE.patientShare/100);
+ const baseTreated=BASE.treated*scale,baseUnits=baseTreated*BASE.units;
+ const baseDrugPayer=baseUnits*BASE.drugPrice*(1-BASE.patientShare/100-BASE.rebate/100);
+ const baseClinicalSaving=baseTreated*BASE.avoided*BASE.efficacy/100;
+ const clinicalSaving=treated*x.avoided*x.efficacy/100;
+ const otherBase=mm*x.medical-baseProviderPayer-baseDrugPayer;
+ const otherNow=otherBase*(1-x.careReduction/100);
+ const claims=otherNow+providerPayer+drugPayer-(clinicalSaving-baseClinicalSaving);
+ const premium=mm*x.premium;
+ const admin=mm*x.admin+x.careProgram*1e6;
+ const quality=mm*x.quality;
+ const mlr=(claims+quality)/premium*100;
+ const gap=Math.max(0,mlrFloor/100*premium-(claims+quality));
+ const payerResult=premium-claims-admin-quality-gap;
+ const providerResult=providerRev-providerCost;
+ const drugResult=drugNet-drugCost;
+ const riskValue=x.approval/100*x.futureValue*1e6-x.trialSpend*1e6;
+ const modeledOOP=completed*x.allowed*patientShare+drugPatient;
+ return {scale,mm,ref,cap,completed,payerShare,providerPayer,providerPatient,providerRev,providerCost,providerResult,treated,units,grossDrug,drugRebate,drugPayer,drugPatient,drugNet,drugCost,drugResult,clinicalSaving,baseClinicalSaving,otherBase,otherNow,claims,premium,admin,quality,mlr,gap,payerResult,riskValue,modeledOOP};
+}
+function comparator(){const sameMarket={...BASE,members:state.members,medical:state.medical,premium:state.premium,admin:BASE.admin,quality:state.quality};return calc(sameMarket);}
+function setScenario(id){const s=scenarios.find(z=>z.id===id);Object.assign(state,BASE,s.patch);activeScenario=id;renderAll();}
+function renderScenarios(){ $('scenarioGrid').innerHTML=scenarios.map(s=>'<button type="button" class="scenario'+(activeScenario===s.id?' active':'')+'" data-glean-id="scenario-'+s.id+'" data-scenario="'+s.id+'"><b>'+esc(s.name)+'</b><span>'+esc(s.sub)+'</span></button>').join('');
+ $('scenarioGrid').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setScenario(b.dataset.scenario)));
+ const s=scenarios.find(z=>z.id===activeScenario);$('scenarioTitle').textContent=s?s.name:'Custom scenario';$('scenarioDescription').textContent=s?s.desc:'Your current combination of levers. Compare each player against a matched-market baseline; premium, medical trend, market size, and quality spend stay fixed in that comparison.';
+}
+function tone(v){return v>1?'pos':v< -1?'neg':'neutral';}
+function deltaText(v){return Math.abs(v)<1000?'≈ $0':fmtSigned(v);}
+function renderAll(){
+ const x=calc(state), b=comparator(), p=x.payerResult-b.payerResult, pr=x.providerResult-b.providerResult, d=x.drugResult-b.drugResult;
+ renderScenarios();groups.flatMap(g=>g.fields).forEach(f=>{$(f[0]).value=state[f[0]];$('value-'+f[0]).textContent=display(state[f[0]],f[5]);});$('mlrFloor').value=String(mlrFloor);
+ const cards=[['payer','Payer operating surplus',x.payerResult,p,'Premium − claims − admin − quality spend − illustrative MLR floor adjustment. Synthetic annual values; change vs matched-market baseline.'],['provider','Provider operating result',x.providerResult,pr,'Collected payer and patient receipts from completed cases minus variable care and fixed pathway cost. Change vs baseline.'],['life','Life-sciences product result',x.drugResult,d,'Net manufacturer sales after rebate minus COGS and product operating investment. Excludes pipeline trial spend; change vs baseline.']];
+ $('kpiGrid').innerHTML=cards.map(c=>'<div class="kpi '+c[0]+'" data-glean-id="kpi-'+c[0]+'"><div class="kpi-label">'+c[1]+info(c[4])+'</div><div class="kpi-value">'+fmtMoney(c[2])+'</div><div class="delta '+tone(c[3])+'">'+deltaText(c[3])+' vs baseline</div><div class="kpi-foot">Synthetic annual operating result</div></div>').join('');
+ const max=Math.max(1,Math.abs(x.payerResult),Math.abs(x.providerResult),Math.abs(x.drugResult));
+ $('playerBars').innerHTML=cards.map(c=>'<div class="player-row" data-glean-id="bar-'+c[0]+'"><span>'+c[0].replace(/^./,m=>m.toUpperCase())+'</span><div class="bartrack"><div class="bar '+c[0]+'" style="width:'+Math.max(1,Math.abs(c[2])/max*100).toFixed(1)+'%"></div></div><span class="num">'+fmtMoney(c[2])+'</span></div>').join('')+'<p class="small">Absolute values have very different scales. Use the delta and ledger to compare mechanisms; bars are not a shared profit target.</p>';
+ const mlrStatus=x.mlr<mlrFloor?'Below simplified floor: '+fmtMoney(x.gap)+' illustrative adjustment':'Above selected MLR floor';
+ const accessDelta=x.completed-b.completed;
+ const mini=[['Completed referrals',Math.round(x.completed).toLocaleString(),(accessDelta>=0?'+':'')+Math.round(accessDelta).toLocaleString()+' vs baseline','Number of completed cases = min(referrals × completion, available capacity).'],['Payer medical loss ratio',fmtPct(x.mlr),mlrStatus,'Simplified (incurred claims + quality spend) / premium; regulatory filing definitions differ.'],['Patient pathway cost share',fmtMoney(x.modeledOOP),deltaText(x.modeledOOP-b.modeledOOP)+' vs baseline','Allowed patient share of provider pathway plus drug gross price patient share; does not include other care or all household spending.']];
+ $('systemMetrics').innerHTML=mini.map((m,i)=>'<div class="mini" data-glean-id="impact-'+i+'"><div class="small">'+m[0]+info(m[3])+'</div><strong>'+m[1]+'</strong><span>'+m[2]+'</span></div>').join('');
+ let signal='';
+ if(x.mlr<mlrFloor) signal='The selected MLR floor binds: the model returns a simplified '+fmtMoney(x.gap)+' to members/sponsor, rather than treating all claim savings as retained payer profit.';
+ else if(accessDelta>100) signal='Access improves by '+Math.round(accessDelta).toLocaleString()+' completed cases. Provider receipts and payer claims move together; added cases are not automatically an ecosystem saving.';
+ else if(accessDelta< -100) signal='Completed care falls by '+Math.abs(Math.round(accessDelta)).toLocaleString()+' cases. The payer may see lower near-term claims while access and provider revenue worsen; downstream clinical harm is not fully modeled.';
+ else if(x.treated>b.treated+100) signal='Treatment expands by '+Math.round(x.treated-b.treated).toLocaleString()+' patients. Manufacturer net revenue, payer net drug cost, patient spending, and modeled avoided care move on different ledgers.';
+ else if(x.platformSavings>0) signal='Provider net platform cost falls by '+fmtMoney((x.platformSavings-x.transitionCost)*1e6)+'. This is a provider P&L effect, not a system saving unless the vendor, migration, and service consequences are also modeled.';
+ else signal='The three balances respond differently. Change a lever or load a scenario to see a clearer transfer or trade-off.';
+ $('dynamicInsight').innerHTML='<b>Read the signal '+info('Interpretation of the current deterministic scenario relative to an illustrative baseline. No causal or actuarial validation is claimed.')+'</b><p>'+signal+'</p>';
+ const ledgers=[['Payer',x.premium,x.claims+x.admin+x.quality+x.gap,x.payerResult,x.payerResult/x.premium*100,mlrStatus],['Provider',x.providerRev,x.providerCost,x.providerResult,x.providerRev?x.providerResult/x.providerRev*100:0,(x.providerRev?x.providerResult/x.providerRev*100:0)<6.5?'Below 6.5% FY2024 national all-payer hospital anchor (not comparable pathway target)':'Pathway margin; 6.5% FY2024 national anchor is not a target'],['Life sciences',x.drugNet,x.drugCost,x.drugResult,x.drugNet?x.drugResult/x.drugNet*100:0,'Phase I option value '+fmtMoney(x.riskValue)+' (undiscounted illustrative)']];
+ $('ledgerBody').innerHTML=ledgers.map((r,i)=>'<tr data-glean-id="ledger-'+['payer','provider','life'][i]+'"><td><b>'+r[0]+'</b></td><td class="numeric">'+fmtMoney(r[1])+'</td><td class="numeric">'+fmtMoney(r[2])+'</td><td class="numeric">'+fmtMoney(r[3])+'</td><td class="numeric">'+fmtPct(r[4])+'</td><td>'+esc(r[5])+'</td></tr>').join('');
+ const bridges=[
+ ['Provider allowed payment',x.providerPayer-b.providerPayer,'Payer claim expense ↑ and provider receipt ↑ for added cases or rate changes.'],
+ ['Patient provider share collected',x.providerPatient-b.providerPatient,'Patient payment received by provider; uncollected balance is not realized revenue.'],
+ ['Manufacturer gross sales',x.grossDrug-b.grossDrug,'Drug units × list price; not net sales.'],
+ ['Manufacturer rebate',x.drugRebate-b.drugRebate,'Manufacturer net sales ↓; modeled payer net drug cost ↓ by equal rebate change.'],
+ ['Net payer drug spend',x.drugPayer-b.drugPayer,'Plan share of gross drug spend less passed-through rebate.'],
+ ['Medical cost offset',x.clinicalSaving-b.clinicalSaving,'Illustrative avoided other medical cost; hypothetical, not measured clinical efficacy.'],
+ ['Other-claims management',b.otherNow-x.otherNow,'Claims outside provider/drug pathways avoided by the selected reduction.'],
+ ['Provider platform net cost reduction',(x.platformSavings-x.transitionCost)*1e6,'Run-rate savings less annualized transition cost; vendor-side revenue effects are not modeled.']
+ ];
+ $('bridgeBody').innerHTML=bridges.map((r,i)=>'<tr data-glean-id="bridge-'+i+'"><td>'+r[0]+'</td><td class="numeric">'+deltaText(r[1])+'</td><td>'+r[2]+'</td></tr>').join('');
+ const rec=[
+ ['Payer',x.mlr<mlrFloor?'Validate actual MLR rules and rebate treatment before expecting retained margin.':'Test benefit, network, quality and claims trend together; monitor MLR and delayed-care risk.', 'A lower unit rate or fewer cases changes provider access and revenue.'],
+ ['Provider',x.completed>=x.cap-1?'Capacity is binding: add clinically appropriate slots or shift bottlenecks before buying more referral volume.':'Track accepted-to-completed referrals, access lag and net contribution by payer/service line.', 'Do not confuse gross charges or diverted patient care with realized margin.'],
+ ['Life sciences',x.riskValue<0?'Reassess Phase I investment, trial design, or partnering under the illustrative option value.':'Test channel-specific net price, access and evidence; protect runway and product contribution.', 'Historical 7.9% approval odds are not a product-specific prediction.']
+ ];
+ $('recommendations').innerHTML=rec.map((r,i)=>'<div class="mini" data-glean-id="guide-'+['payer','provider','life'][i]+'"><b>'+r[0]+'</b><div>'+r[1]+'</div><span>'+r[2]+'</span></div>').join('');
+}
+makeControls();$('resetBtn').addEventListener('click',()=>setScenario('baseline'));
+$('sourceToggle').addEventListener('click',()=>{const p=$('sourcesPanel');p.hidden=!p.hidden;$('sourceToggle').setAttribute('aria-expanded',String(!p.hidden));if(!p.hidden)p.scrollIntoView({behavior:'smooth',block:'start'});});
+renderAll();
+})();
+</script>
+<script>
+  if (window.GleanBridge) {
+    window.GleanBridge.postMessage({ actionId: 'export-pdf', type: 'glean-add-menu', metadata: { label: 'Export as PDF', icon: 'export' } });
+    window.GleanBridge.onMessage('action', function(data) { if (data.actionId === 'export-pdf') window.print(); });
+  }
+  function prepareChartsForPrint() {
+    if (!window.echarts) return;
+    document.querySelectorAll('[_echarts_instance_]').forEach(function(el) {
+      var chart = echarts.getInstanceByDom(el); if (!chart) return;
+      var img = new Image(); img.src = chart.getDataURL({ type: 'png', pixelRatio: 2 }); img.className = 'print-chart-img';
+      img.style.cssText = 'width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:10;';
+      el.dataset.prevPosition = el.style.position; el.style.position = 'relative'; el.appendChild(img);
+    });
+  }
+  function cleanUpAfterPrint() {
+    document.querySelectorAll('[_echarts_instance_]').forEach(function(el) {
+      var img = el.querySelector('.print-chart-img'); if (!img) return; img.remove(); el.style.position = el.dataset.prevPosition || ''; delete el.dataset.prevPosition;
+    });
+  }
+  window.addEventListener('beforeprint', prepareChartsForPrint);
+  window.addEventListener('afterprint', cleanUpAfterPrint);
+</script>
+</body>
+</html>

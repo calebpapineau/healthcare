@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Healthcare ecosystem and dependencies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F1F4F3; --surface:#FFFFFF; --ink:#16232A; --ink-2:#4B5B63; --ink-3:#7C8A90; --rule:#D3DBDA;
+  --provider:#0E6B68; --shared:#6B3F7A; --payer:#2F4A9B; --support:#8A6410;
+  --provider-t:#E2EFEE; --shared-t:#EEE6F1; --payer-t:#E4E8F5; --support-t:#F4ECDA;
+  --std:#B42840; --std-t:#FBE4E8; --off:#1D7A4E; --off-t:#E1F2E8; --spine:#16232A; --spine-ink:#E9EEEE; --spine-chip:#24353E;
+  --font:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1719; --surface:#172225; --ink:#E6ECEC; --ink-2:#A9B6BA; --ink-3:#7D8B90; --rule:#2B3A3E;
+    --provider:#4FB3AE; --shared:#B98AC8; --payer:#8DA2EA; --support:#D7AE52;
+    --provider-t:#173634; --shared-t:#2C2233; --payer-t:#1E2640; --support-t:#33291A;
+    --std:#F0687E; --std-t:#3A1A21; --off:#5DC28E; --off-t:#16301F; --spine:#070C0D; --spine-ink:#E6ECEC; --spine-chip:#1C2A2E;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1719; --surface:#172225; --ink:#E6ECEC; --ink-2:#A9B6BA; --ink-3:#7D8B90; --rule:#2B3A3E;
+  --provider:#4FB3AE; --shared:#B98AC8; --payer:#8DA2EA; --support:#D7AE52;
+  --provider-t:#173634; --shared-t:#2C2233; --payer-t:#1E2640; --support-t:#33291A;
+  --std:#F0687E; --std-t:#3A1A21; --off:#5DC28E; --off-t:#16301F; --spine:#070C0D; --spine-ink:#E6ECEC; --spine-chip:#1C2A2E;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--std);outline-offset:2px;border-radius:4px}
+
+.wrap{max-width:1560px;margin:0 auto;padding:28px clamp(14px,3vw,36px) 48px}
+header.top{display:flex;flex-wrap:wrap;gap:18px 32px;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+.title h1{font-size:clamp(26px,3.2vw,38px);line-height:1.05;letter-spacing:-0.02em;font-weight:800;margin:0 0 8px;max-width:22ch}
+.title p{margin:0;color:var(--ink-2);max-width:68ch}
+.title .src{font-size:13px;color:var(--ink-3);margin-top:6px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg-toggle{display:inline-flex;background:var(--surface);border:1px solid var(--rule);border-radius:999px;padding:3px}
+.seg-toggle button{border:0;background:none;padding:7px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px;color:var(--ink-2)}
+.seg-toggle button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.search{position:relative}
+.search input{font:inherit;font-size:14px;width:min(260px,70vw);padding:8px 12px 8px 32px;border-radius:999px;border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
+.search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--ink-3)}
+.clear{border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:7px 14px;cursor:pointer;font-size:14px;font-weight:600}
+.clear[hidden]{display:none}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+@media (max-width:1180px){.layout{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- Map ---------- */
+.map{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-areas:"offer offer offer offer" "prov prov shared payer" "spine spine spine spine" "sup sup sup sup";gap:14px}
+.zone{border-radius:14px;padding:14px 14px 16px;background:var(--zt);border:1px solid color-mix(in srgb,var(--zc) 22%,transparent);min-width:0}
+.zone[data-zone="provider"]{grid-area:prov;--zc:var(--provider);--zt:var(--provider-t)}
+.zone[data-zone="shared"]{grid-area:shared;--zc:var(--shared);--zt:var(--shared-t)}
+.zone[data-zone="payer"]{grid-area:payer;--zc:var(--payer);--zt:var(--payer-t)}
+.zone[data-zone="support"]{grid-area:sup;--zc:var(--support);--zt:var(--support-t)}
+.zone-head{display:flex;gap:10px;align-items:baseline;margin:0 2px 12px;flex-wrap:wrap}
+.zone-head h2{margin:0;font-size:19px;font-weight:800;color:var(--zc);letter-spacing:-0.01em}
+.zone-head p{margin:0;font-size:13px;color:var(--ink-2);flex:1 1 220px}
+.zone-body{display:grid;gap:12px}
+.zone[data-zone="provider"] .zone-body{grid-template-columns:repeat(2,minmax(0,1fr))}
+.zone[data-zone="support"] .zone-body{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+.cat{background:var(--surface);border-radius:10px;padding:12px 12px 8px;border-top:3px solid var(--zc);min-width:0}
+.cat h3{margin:0 0 3px;font-size:16px;font-weight:700}
+.cat .def{margin:0 0 8px;font-size:12.5px;color:var(--ink-2)}
+.orgs{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 8px;padding:0;list-style:none}
+.orgs li{font-size:11.5px;padding:2px 7px;border-radius:5px;background:var(--paper);color:var(--ink-2)}
+.segs{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.segs li{border-bottom:1px solid var(--rule)}
+.segs li:last-child{border-bottom:0}
+.seg{display:grid;grid-template-columns:1fr auto;gap:2px 10px;width:100%;text-align:left;background:none;border:0;padding:8px 6px;cursor:pointer;border-radius:6px;transition:opacity .15s,background .15s}
+.seg .n{font-weight:600;font-size:13.5px;line-height:1.25}
+.seg .d{grid-column:1/-1;font-size:12px;color:var(--ink-2);line-height:1.35}
+.seg .ports{display:flex;gap:3px;align-items:center;padding-top:4px}
+.seg .ports i{width:5px;height:5px;border-radius:50%;background:var(--ink-3);opacity:.55}
+.seg .moved{font-size:11px;color:var(--zc);font-weight:600;grid-column:1/-1}
+.seg:hover{background:var(--paper)}
+.seg.lit{background:color-mix(in srgb,var(--zc) 12%,var(--surface))}
+.seg.lit .ports i{background:var(--std);opacity:1}
+.seg.sel{background:color-mix(in srgb,var(--zc) 18%,var(--surface));box-shadow:inset 3px 0 0 var(--zc)}
+.dim .seg:not(.lit):not(.sel){opacity:.32}
+.seg.nomatch{opacity:.22}
+
+/* ---------- Offerings ---------- */
+.offer{grid-area:offer;background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--off);border-radius:14px;padding:14px 16px 16px}
+.offer-head{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;margin-bottom:10px}
+.offer-head h2{margin:0;font-size:17px;font-weight:800;color:var(--off)}
+.offer-head p{margin:0;font-size:13px;color:var(--ink-2);flex:1 1 300px}
+.gap-toggle{border:1px solid var(--off);background:none;color:var(--off);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:700;cursor:pointer}
+.gap-toggle[aria-pressed="true"]{background:var(--off);color:var(--surface)}
+.ochips{display:flex;flex-wrap:wrap;gap:7px}
+.ochip{border:1.5px solid var(--off);background:none;color:var(--off);border-radius:7px;padding:7px 12px;font-weight:700;font-size:13.5px;cursor:pointer;transition:opacity .15s,background .15s}
+.ochip .c{font-weight:500;opacity:.75;font-size:12px;margin-left:5px}
+.ochip[data-kind="horizontal"]{border-style:double;border-width:3px;padding:5px 11px}
+.ochip[data-kind="pursuit"]{border-style:dashed}
+.ochip:hover{background:var(--off-t)}
+.ochip.lit,.ochip.sel{background:var(--off);color:var(--surface)}
+.ochip.sel{box-shadow:0 0 0 3px var(--off-t)}
+.offer.dim .ochip:not(.lit):not(.sel){opacity:.35}
+.seg .offc{display:none;grid-column:1/-1;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--off)}
+.seg .offc i{width:7px;height:7px;border-radius:2px;background:var(--off)}
+.seg .offc em{font-style:normal;color:var(--ink-2);font-weight:600}
+.gaps .seg .offc{display:flex}
+.gaps .seg[data-cov="0"]{background:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--ink-3) 14%,transparent) 6px 7px)}
+.gaps .seg[data-cov="0"] .offc em{color:var(--ink-2)}
+.map[data-mode="off"] .seg.lit{background:var(--off-t)}
+.map[data-mode="off"] .seg.lit .ports i{background:var(--ink-3);opacity:.55}
+.orgs li.tgt{background:var(--off-t);color:var(--off);font-weight:700}
+.orgs li.tgt::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--off);margin-right:5px;vertical-align:1px}
+
+/* ---------- Standards spine ---------- */
+.spine{grid-area:spine;background:var(--spine);color:var(--spine-ink);border-radius:14px;padding:14px 16px 16px;position:relative}
+.spine-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline;margin-bottom:10px}
+.spine-head h2{margin:0;font-size:17px;font-weight:800}
+.spine-head p{margin:0;font-size:13px;opacity:.75}
+.groups{display:grid;grid-template-columns:repeat(4,minmax(0,auto));gap:10px 22px;justify-content:start}
+@media (max-width:1180px){.groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.groups{grid-template-columns:1fr}}
+.group h4{margin:0 0 6px;font-size:12px;font-weight:600;opacity:.65}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{position:relative;border:1px solid transparent;background:var(--spine-chip);color:var(--spine-ink);padding:7px 11px 7px 22px;border-radius:7px;cursor:pointer;font-weight:700;font-size:13.5px;transition:opacity .15s,background .15s,border-color .15s}
+.chip::before{content:"";position:absolute;left:9px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:currentColor;opacity:.35}
+.chip .c{font-weight:500;opacity:.6;font-size:12px;margin-left:5px}
+.chip:hover{border-color:color-mix(in srgb,var(--spine-ink) 35%,transparent)}
+.chip.lit{background:var(--std);color:#fff}
+.chip.lit::before{opacity:1;background:#fff;box-shadow:0 0 0 3px color-mix(in srgb,#fff 25%,transparent)}
+.chip.sel{background:var(--std);color:#fff;border-color:#fff}
+.spine.dim .chip:not(.lit):not(.sel){opacity:.35}
+
+/* ---------- Panel ---------- */
+aside.panel{position:sticky;top:calc(14px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:18px 18px 20px;max-height:calc(100vh - 28px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:auto}
+.panel .kicker{font-size:13px;font-weight:600;color:var(--pc,var(--ink-2));margin:0 0 4px}
+.panel h2{margin:0 0 8px;font-size:22px;line-height:1.15;font-weight:800;letter-spacing:-0.01em}
+.panel h3{font-size:13.5px;margin:16px 0 6px;font-weight:700}
+.panel p{margin:0 0 8px;font-size:14px;color:var(--ink-2)}
+.panel .data{font-size:14.5px;color:var(--ink)}
+.panel ul{list-style:none;margin:0;padding:0}
+.plist li{padding:7px 0;border-top:1px solid var(--rule);font-size:13.5px}
+.plist li:first-child{border-top:0}
+.plist button{background:none;border:0;padding:0;cursor:pointer;font-weight:700;text-align:left}
+.plist button:hover{text-decoration:underline}
+.plist .s{display:block;font-size:12.5px;color:var(--ink-2);font-weight:400}
+.ptags{display:flex;flex-wrap:wrap;gap:5px}
+.ptags li{font-size:12px;padding:3px 8px;border-radius:5px;background:var(--paper);color:var(--ink-2)}
+.note{border-left:3px solid var(--pc,var(--std));padding:6px 10px;background:var(--paper);border-radius:0 6px 6px 0;font-size:13px;color:var(--ink-2);margin-top:12px}
+.legend li{display:flex;gap:9px;align-items:center;font-size:13.5px;padding:4px 0;color:var(--ink-2)}
+.sw{width:12px;height:12px;border-radius:3px;flex:none}
+.stat{display:flex;gap:18px;margin:12px 0 4px}
+.stat div{font-size:12.5px;color:var(--ink-2)}
+.stat b{display:block;font-size:22px;color:var(--ink);font-weight:800}
+.close{display:none}
+.panel .tl li{display:flex;gap:8px;align-items:baseline}
+.panel .pri{font-size:11.5px;font-weight:700;color:var(--off);flex:none;min-width:74px}
+.panel .acc li{font-size:12.5px;padding:3px 8px;border-radius:5px;background:var(--off-t);color:var(--off);font-weight:600}
+@media (max-width:1180px){
+  aside.panel{position:fixed;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));top:auto;max-height:58vh;z-index:20;box-shadow:0 12px 40px rgba(10,20,25,.28);transform:translateY(calc(100% + 30px));transition:transform .22s ease;visibility:hidden}
+  aside.panel.open{transform:none;visibility:visible}
+  .close{display:block;position:absolute;right:12px;top:12px;border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:4px 11px;cursor:pointer;font-size:13px;font-weight:600}
+}
+@media (max-width:900px){
+  .map{grid-template-columns:1fr;grid-template-areas:"offer" "prov" "shared" "payer" "spine" "sup"}
+  .zone[data-zone="provider"] .zone-body,.zone[data-zone="support"] .zone-body{grid-template-columns:1fr}
+}
+
+/* ---------- Matrix ---------- */
+.matrix-wrap{background:var(--surface);border:1px solid var(--rule);border-radius:14px;overflow:auto;max-height:calc(100vh - 160px)}
+table.mx{border-collapse:separate;border-spacing:0;font-size:13px;min-width:900px;width:100%}
+.mx th,.mx td{border-bottom:1px solid var(--rule)}
+.mx thead th{position:sticky;top:0;background:var(--surface);z-index:2;padding:8px 4px;font-weight:700;vertical-align:bottom}
+.mx thead th button{background:none;border:0;cursor:pointer;font-weight:700;writing-mode:vertical-rl;transform:rotate(180deg);padding:4px 2px;white-space:nowrap;font-size:12.5px}
+.mx thead th.gstart{border-left:1px solid var(--rule)}
+.mx .rh{position:sticky;left:0;background:var(--surface);z-index:1;text-align:left;padding:7px 12px;min-width:260px;font-weight:600}
+.mx thead .rh{z-index:3}
+.mx .rh button{background:none;border:0;padding:0;cursor:pointer;text-align:left;font-weight:600}
+.mx tr.cat-row th{text-align:left;padding:9px 12px 5px;font-size:13px;font-weight:800;color:var(--zc);background:var(--zt);position:sticky;left:0}
+.mx td{text-align:center;padding:0;width:44px;height:30px}
+.mx td.gstart{border-left:1px solid var(--rule)}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--zc)}
+.mx tr.row:hover td,.mx tr.row:hover .rh{background:var(--paper)}
+.mx td.colhi,.mx th.colhi{background:var(--std-t)}
+.mx tr.row.sel .rh,.mx tr.row.sel td{background:color-mix(in srgb,var(--zc) 14%,var(--surface))}
+.mx .tot{font-size:12px;color:var(--ink-3);font-weight:600}
+.mx .offcol{border-right:2px solid var(--off);min-width:118px;width:118px;font-size:12px;font-weight:700;color:var(--off);text-align:center}
+.mx .offbtn{border:1px solid color-mix(in srgb,var(--off) 45%,transparent);background:var(--surface);color:var(--off);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.mx .offbtn b{font-size:13.5px;font-weight:800;margin-right:2px}
+.mx .offbtn:hover{background:var(--off);color:var(--surface)}
+.mx td.offcol.none .offbtn{border-style:dashed;color:var(--ink-3);border-color:var(--rule)}
+.mx td.offcol.none .offbtn:hover{background:var(--paper);color:var(--ink-2)}
+dialog.om{border:0;padding:0;border-radius:16px;background:var(--surface);color:var(--ink);width:min(600px,calc(100vw - 24px));max-height:min(80vh,760px);box-shadow:0 24px 70px rgba(8,18,22,.35)}
+dialog.om::backdrop{background:rgba(10,20,24,.45)}
+.om-inner{display:flex;flex-direction:column;max-height:inherit}
+.om-head{padding:18px 20px 12px;border-bottom:1px solid var(--rule);position:relative}
+.om-head .kicker{margin:0 0 3px;font-size:13px;font-weight:600}
+.om-head h2{margin:0;font-size:21px;line-height:1.2;font-weight:800;padding-right:70px}
+.om-head p{margin:6px 0 0;font-size:13.5px;color:var(--ink-2)}
+.om-x{position:absolute;right:14px;top:14px;border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px;font-weight:600}
+.om-body{padding:6px 20px 20px;overflow:auto}
+.om-card{border-top:1px solid var(--rule);padding:14px 0 4px}
+.om-card:first-child{border-top:0}
+.om-card h3{margin:0 0 2px;font-size:16px;font-weight:800;color:var(--off)}
+.om-card .area{margin:0 0 6px;font-size:12.5px;color:var(--ink-3);font-weight:600}
+.om-card p{margin:0 0 8px;font-size:14px;color:var(--ink-2)}
+.om-card .acc{display:flex;flex-wrap:wrap;gap:5px;list-style:none;margin:0 0 10px;padding:0}
+.om-card .acc li{font-size:12px;padding:3px 8px;border-radius:5px;background:var(--off-t);color:var(--off);font-weight:600}
+.om-card .note{border-left:3px solid var(--off);padding:6px 10px;background:var(--paper);border-radius:0 6px 6px 0;font-size:13px;color:var(--ink-2);margin:0 0 10px}
+.om-go{border:1.5px solid var(--off);background:none;color:var(--off);border-radius:7px;padding:5px 11px;font-size:13px;font-weight:700;cursor:pointer}
+.om-go:hover{background:var(--off);color:var(--surface)}
+.om-empty{padding:14px 0 4px;font-size:14px;color:var(--ink-2)}
+.om-sub{margin:16px 0 4px;font-size:13.5px;font-weight:700}
+.mx thead th.offcol{color:var(--off);font-size:12.5px;vertical-align:bottom;padding:8px 6px}
+.mx td.offcol.none{color:var(--ink-3);font-weight:500;background:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--ink-3) 14%,transparent) 6px 7px)}
+.mx tr.row.offhi td,.mx tr.row.offhi .rh{background:var(--off-t)}
+
+/* ---------- Notes ---------- */
+.notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:900px){.notes{grid-template-columns:1fr}}
+.nblock{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:16px 18px}
+.nblock h2{margin:0 0 4px;font-size:18px;font-weight:800}
+.nblock > p{margin:0 0 10px;color:var(--ink-2);font-size:13.5px}
+.nblock ul{margin:0;padding:0;list-style:none}
+.nblock li{padding:9px 0;border-top:1px solid var(--rule);font-size:14px;max-width:75ch}
+.nblock li b{font-weight:700}
+.nblock li span{display:block;color:var(--ink-2);font-size:13px;margin-top:2px}
+
+[hidden]{display:none !important}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title">
+      <h1>Healthcare ecosystem and dependencies</h1>
+      <p id="lede"></p>
+      <p class="src">Rebuilt from “Caleb’s HC Ecosystem Map” on the HeathCare Taxonomy Miro board.</p>
+    </div>
+    <div class="controls">
+      <div class="seg-toggle" role="group" aria-label="View">
+        <button type="button" data-view="map" aria-pressed="true">Map</button>
+        <button type="button" data-view="matrix" aria-pressed="false">Matrix</button>
+        <button type="button" data-view="notes" aria-pressed="false">Cleanup notes</button>
+      </div>
+      <label class="search"><span class="sr" hidden>Search</span>
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="2" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg>
+        <input id="q" type="search" placeholder="Search segments, data, organizations" aria-label="Search segments, data, organizations">
+      </label>
+      <button type="button" class="clear" id="clear" hidden>Clear selection</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <main>
+      <section id="view-map"><div class="map" id="map"></div></section>
+      <section id="view-matrix" hidden><div class="matrix-wrap"><table class="mx" id="mx"></table></div></section>
+      <section id="view-notes" hidden><div class="notes" id="notes"></div></section>
+    </main>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+  <dialog class="om" id="om" aria-labelledby="om-title"><div class="om-inner"><div class="om-head" id="om-head"></div><div class="om-body" id="om-body"></div></div></dialog>
+</div>
+
+<script>
+const STD = {
+  fhir:  {name:"HL7 FHIR", short:"FHIR", g:"exchange", desc:"API-based exchange of clinical and administrative resources."},
+  v2:    {name:"HL7 v2", short:"HL7 v2", g:"exchange", desc:"Event and message exchange, especially ADT, orders, and results."},
+  cda:   {name:"C-CDA / CDA", short:"C-CDA", g:"exchange", desc:"Document-based clinical exchange."},
+  uscdi: {name:"USCDI / TEFCA", short:"USCDI", g:"exchange", desc:"U.S. interoperability policy and exchange framework."},
+  dicom: {name:"DICOM / DICOMweb", short:"DICOM", g:"exchange", desc:"Medical imaging and image metadata."},
+  snomed:{name:"SNOMED CT", short:"SNOMED", g:"term", desc:"Clinical terminology for findings, problems, and procedures."},
+  loinc: {name:"LOINC", short:"LOINC", g:"term", desc:"Laboratory, clinical observation, and measurement codes."},
+  icd:   {name:"ICD-10-CM/PCS", short:"ICD-10", g:"term", desc:"Diagnosis and inpatient procedure classification."},
+  cpt:   {name:"CPT / HCPCS", short:"CPT", g:"term", desc:"Professional and supply/procedure coding."},
+  rx:    {name:"RxNorm / NDC", short:"RxNorm", g:"term", desc:"Medication normalization and product identification."},
+  x12:   {name:"X12 healthcare transactions", short:"X12", g:"txn", desc:"Eligibility, claims, remittance, authorization, and status exchange."},
+  ncpdp: {name:"NCPDP", short:"NCPDP", g:"txn", desc:"Pharmacy transactions and e-prescribing."},
+  gs1:   {name:"GS1 / EPCIS / UDI", short:"GS1", g:"prod", desc:"Product identity, serialization, and supply-chain event data."},
+  cdisc: {name:"CDISC SDTM / ADaM", short:"CDISC", g:"prod", desc:"Clinical trial submission and analysis data."},
+  omop:  {name:"OMOP Common Data Model", short:"OMOP", g:"prod", desc:"Research and observational analytics normalization."}
+};
+const GROUPS = {exchange:"Clinical exchange", term:"Terminology and classification", txn:"Transactions and payment", prod:"Product and research data"};
+
+const ZONES = {
+  provider:{name:"Provider", desc:"Care delivery hospitals, physician practices, behavioral health, labs, imaging centers, pharmacies, post-acute, home health, EMS."},
+  shared:{name:"Shared and oversight", desc:"Population health and the bodies that set standards across providers and payers."},
+  payer:{name:"Payer", desc:"Commercial insurers, Medicare/Medicaid, PBMs, TPAs, employer-sponsored plans."},
+  support:{name:"Support", desc:"Companies and industries that support the many payers and providers of healthcare."}
+};
+
+const CATS = [
+ {id:"cd", zone:"provider", name:"Care delivery", def:"Organizations that directly assess, diagnose, treat, rehabilitate, monitor, or support patients.",
+  orgs:["Providence","UW Medicine","MultiCare Health System","PeaceHealth","Virginia Mason Franciscan Health"],
+  segs:[
+   {id:"idn", n:"Integrated delivery system / health system", d:"Longitudinal EHR, claims, labs, imaging, scheduling, workforce, quality", s:["fhir","v2","cda","uscdi","snomed","loinc","icd","cpt","x12"]},
+   {id:"lab", n:"Diagnostics laboratory", d:"Orders, specimens, results, reference ranges, pathology images, quality controls", s:["loinc","v2","snomed","fhir"]},
+   {id:"acute", n:"Acute-care hospital", d:"ADT, orders, results, notes, MAR, clinical images, claims, staffing", s:["v2","fhir","cda","icd","cpt","snomed","loinc","rx","dicom","x12","gs1"]},
+   {id:"img", n:"Imaging and radiology provider", d:"Images, radiology reports, orders, dose data, priors", s:["dicom","v2","loinc","cpt"]},
+   {id:"amb", n:"Ambulatory / physician practice", d:"EHR, scheduling, referrals, orders/results, care plans, patient-reported outcomes", s:["fhir","cda","uscdi","loinc","snomed","icd","cpt","ncpdp","x12"]},
+   {id:"bh", n:"Behavioral health and substance-use provider", d:"Clinical notes, assessments, medications, encounters, social needs, outcomes", s:["cda","fhir","snomed","icd","cpt","x12"]},
+   {id:"ems", n:"Emergency medical services and transport", d:"CAD, ePCR, dispatch, location, vitals, destination, handoff data", s:["fhir","icd","snomed","cpt","x12"]},
+   {id:"pac", n:"Post-acute and long-term care", d:"Minimum data sets, care plans, ADT, medication, therapy, functional status", s:["cda","v2","fhir","icd","rx","x12"]},
+   {id:"home", n:"Home health, hospice, and palliative care", d:"OASIS, visit notes, medication, functional status, caregiver data, device readings", s:["cda","fhir","icd","cpt","rx","x12"]}
+  ]},
+ {id:"ls", zone:"provider", name:"Life sciences", def:"Organizations that discover, develop, manufacture, regulate, or commercialize therapies and devices.",
+  orgs:["Pfizer","Bristol Myers Squibb","Sana Biotechnology","Omeros","Seagen / Genmab"],
+  segs:[
+   {id:"pharma", n:"Pharmaceutical / biotechnology company", d:"Clinical trial, R&D, safety, manufacturing, supply, market access, real-world data", s:["cdisc","rx","gs1","omop"], note:"Attached the R&D data box that was floating unattached on the board."},
+   {id:"rxp", n:"Pharmacy and specialty pharmacy", d:"Prescriptions, fills, formulary, adherence, prior auth, adverse events", s:["ncpdp","rx","x12","fhir"]},
+   {id:"cro", n:"Contract research organization (CRO)", d:"Protocol, EDC, ePRO, lab, imaging, monitoring, safety, site performance", s:["cdisc","loinc","dicom"], moved:"Moved from Coverage and payment", note:"Moved from Coverage and payment. Its data box was unattached on the board."},
+   {id:"cdmo", n:"Contract development and manufacturing organization (CDMO)", d:"Batch records, materials, quality, deviations, inventory, serialization", s:["gs1","rx"], moved:"Moved from Governance and oversight", note:"Moved from Governance and oversight. Took the batch-records data box that sat between the pharma segment and the category card."},
+   {id:"dev", n:"Medical device and digital therapeutics company", d:"Device telemetry, patient outcomes, design history, quality, complaints, post-market safety", s:["gs1","fhir"], moved:"Moved from Technology and infrastructure", note:"Moved from Technology and infrastructure to match the Life sciences definition (therapies and devices). Attached the unassigned device data box."}
+  ]},
+ {id:"ph", zone:"shared", name:"Public health and community", def:"Organizations that manage population health, prevention, social needs, and community interventions.",
+  orgs:["Washington State Department of Health","Oregon Health Authority","Public Health — Seattle & King County","PATH","Northwest Kidney Centers"],
+  segs:[
+   {id:"hie", n:"Health information exchange (HIE) / health data network", d:"Patient identity, clinical documents, encounter, ADT, consent, provider directory", s:["fhir","v2","cda","uscdi"]},
+   {id:"cbo", n:"Community-based organization / social care provider", d:"Referrals, social needs, case notes, outcomes, eligibility, resource directories", s:["fhir","uscdi","icd","snomed"]},
+   {id:"pha", n:"Public health agency", d:"Case surveillance, immunization, mortality, registries, environmental, social determinants", s:["v2","fhir","loinc","snomed","icd","uscdi"]}
+  ]},
+ {id:"gov", zone:"shared", name:"Governance and oversight", def:"Organizations that establish standards, assure quality, license, accredit, and regulate.",
+  orgs:["Washington State Health Care Authority","Oregon Health Authority","Idaho Department of Health and Welfare","Washington Medical Commission","Oregon Health Leadership Council"],
+  segs:[
+   {id:"acc", n:"Accreditor, regulator, and quality organization", d:"Quality measures, surveys, complaints, adverse events, licensure, inspections", s:["icd","cpt","snomed","loinc","fhir"]}
+  ]},
+ {id:"pay", zone:"payer", name:"Coverage and payment", def:"Organizations that finance, administer, underwrite, reimburse, or manage healthcare benefits.",
+  orgs:["Cambia Health Solutions","Regence BlueShield","Kaiser Permanente Northwest","Premera Blue Cross","Moda Health"],
+  segs:[
+   {id:"com", n:"Commercial health insurer", d:"Enrollment, eligibility, claims, authorizations, provider networks, quality, risk", s:["x12","fhir","icd","cpt","uscdi"]},
+   {id:"govp", n:"Government payer / public program administrator", d:"Eligibility, enrollment, claims, provider, quality, social risk, program integrity", s:["x12","fhir","icd","cpt","uscdi"], moved:"Moved from Governance and oversight", note:"Moved from Governance and oversight. Medicaid agencies such as the Washington State Health Care Authority play both roles."},
+   {id:"pbm", n:"Pharmacy benefit manager (PBM)", d:"Pharmacy claims, formulary, rebate, utilization, prior auth, adherence", s:["ncpdp","rx","x12"]},
+   {id:"tpa", n:"Third-party administrator / benefits administrator", d:"Eligibility, claims, plan design, provider network, employee benefits", s:["x12","icd","cpt"]},
+   {id:"emp", n:"Employer / occupational health buyer", d:"Benefits, claims, absence, safety, wellness, occupational exposure, workforce", s:["x12","icd"]}
+  ]},
+ {id:"ti", zone:"support", name:"Technology and infrastructure", def:"Platforms and services that make care, payment, data, workforce, and supply chains operate.",
+  orgs:["Health Catalyst","Edifecs","Microsoft","Amazon Web Services","Optum","MacroHealth"],
+  segs:[
+   {id:"ehr", n:"EHR / health IT platform vendor", d:"Clinical, financial, administrative, identity, interoperability metadata", s:["fhir","v2","cda","uscdi","snomed","loinc","icd","cpt","rx","ncpdp","x12","dicom"]},
+   {id:"data", n:"Healthcare data, analytics, and AI platform provider", d:"Multi-source clinical, claims, operational, genomic, device, and social data", s:["fhir","omop","snomed","loinc","icd","rx","dicom","v2","x12"]},
+   {id:"rcm", n:"Revenue cycle management and healthcare BPO", d:"Claims, charges, coding, denials, eligibility, authorizations, payments", s:["x12","icd","cpt"]},
+   {id:"dme", n:"Medical equipment, DME, and home technology provider", d:"Orders, equipment, device telemetry, delivery, maintenance, patient eligibility", s:["gs1","cpt","x12","fhir"]},
+   {id:"sup", n:"Healthcare supply chain, distributor, and GPO", d:"Product, contract, inventory, utilization, lot/serial, demand, vendor performance", s:["gs1","rx"], moved:"Moved from Consumer and digital", note:"Moved from Consumer and digital, since this category’s definition covers supply chains."},
+   {id:"wf", n:"Healthcare workforce, staffing, and education provider", d:"Credentials, schedules, competencies, productivity, staffing, learning outcomes", s:[], note:"No standard on the board connects to this segment."}
+  ]},
+ {id:"cx", zone:"support", name:"Consumer and digital", def:"Organizations that engage consumers and deliver navigation, virtual care, devices, or marketplaces.",
+  orgs:["98point6","DexCare","Xealth","Wildflower Health","Bellevue Healthcare"],
+  segs:[
+   {id:"vc", n:"Virtual care / digital health platform", d:"Encounter, app engagement, device, patient-reported, behavioral, claims", s:["fhir","icd","cpt","snomed","x12"]},
+   {id:"nav", n:"Medical travel, navigation, and care marketplace", d:"Provider directory, pricing, quality, scheduling, utilization, member preferences", s:["fhir","x12"]}
+  ]},
+ {id:"ra", zone:"support", name:"Research and academia", def:"Organizations that generate evidence, educate professionals, and translate research into care.",
+  orgs:["University of Washington","Fred Hutch Cancer Center","Oregon Health & Science University","Pacific Northwest National Laboratory","Allen Institute"],
+  segs:[
+   {id:"amc", n:"Academic medical center / health research institution", d:"EHR, research registry, biospecimen, genomic, trial, education, publications", s:["omop","fhir","cdisc","snomed","loinc","icd","dicom","v2"]}
+  ]}
+];
+
+const OFFERS = [
+ {id:"cwai", kind:"offering", name:"Clinical workflow AI", area:"Provider (health systems)",
+  desc:"Ambient clinical documentation, decision support, and ML-assisted medication reconciliation embedded in clinician workflow.",
+  acc:["GenAI Document Analysis","ML Adoption Playbook","Modern Data Enterprise"],
+  proof:"Saves 3–5 minutes per patient visit; flags 6–8 medication error types at discharge across 3 health systems.",
+  refs:"Wellstar, Seattle Children’s, Texas Children’s, Houston Methodist", segs:["idn","acute","amb","bh"]},
+ {id:"lake", kind:"offering", name:"Owned lakehouse", area:"Provider (health systems)",
+  desc:"Move health systems off Health Catalyst DOS/Ignite to an owned, governed data and AI foundation, and build durable internal capability.",
+  acc:[], proof:"The executive briefing on the board quantifies run-rate savings and new capability value.",
+  refs:"", segs:["idn","amc"],
+  caveat:"No partner platform is named on the board. This is the natural home for the Databricks play listed under account ownership."},
+ {id:"payer", kind:"offering", name:"Payer data and GenAI", area:"Payer",
+  desc:"Claims fraud and error detection, member portal modernization, and analytics platforms for payer data.",
+  acc:["GenAI Data Governance","Modern Data Enterprise","Data Engineering Accelerator"],
+  proof:"Identifies $250K in claims per week needing investigation; 50+ data products served to analytics and self-service channels.",
+  refs:"Blue Cross of Idaho", segs:["com","govp"],
+  caveat:"The “What we don’t do” slide says payer data-platform work is relevant only when tied to provider workflow AI."},
+ {id:"lsrd", kind:"offering", name:"Life sciences R&D data", area:"Life sciences and biopharma",
+  desc:"R&D data platforms and regulatory acceleration: ML-assisted discovery and trials, regulatory filings, and HPC bursting for R&D workloads.",
+  acc:["Data Engineering Accelerator","GenAI Document Analysis","GenAI POC Accelerator"],
+  proof:"Faster regulatory submissions and trial data management.",
+  refs:"Eisai, AmerisourceBergen", segs:["pharma","cro"],
+  caveat:"The “What we don’t do” slide says life sciences is in the portfolio but is not the primary GTM motion."},
+ {id:"isv", kind:"offering", name:"Embedded AI for health tech", area:"Health tech / ISV",
+  desc:"Embed provider-facing AI into partner products and take it from POC to production, such as Amazon Transcribe and Bedrock ambient notes written into practice management systems.",
+  acc:["GenAI POC Accelerator","ML Adoption Playbook","DevOps Transformation"],
+  proof:"47% less time on the computer; 39% more direct patient interaction; 300+ practices live.",
+  refs:"Henry Schein and other ISVs listed on the board", segs:["ehr","vc","data"]},
+ {id:"rcm", kind:"offering", name:"Agentic RCM and prior auth", area:"Revenue cycle and prior authorization",
+  desc:"End-to-end workflow agents for prior authorization and eligibility verification on Bedrock, integrated with EHR systems.",
+  acc:["GenAI Data Governance","DevOps Transformation"],
+  proof:"Automates manual prior-auth and eligibility workflows, reducing processing time.",
+  refs:"Henry Schein RCM roadmap", segs:["rcm","idn","amb","com"]},
+ {id:"aigov", kind:"horizontal", name:"AI governance and enablement", area:"Enterprise enablement, applies to every segment",
+  desc:"AI Center of Excellence design, a repeatable use-case evaluation framework, and role-specific copilots.",
+  acc:["GenAI Data Governance","Value Realization Framework","DevOps Transformation"],
+  proof:"51 AI solutions reviewed in 10 months; 1–3 new AI initiatives processed weekly.", refs:"", segs:[]},
+ {id:"sch", kind:"pursuit", name:"Seattle Children’s use cases", area:"Active pursuit",
+  desc:"Eight provider use cases aligned to Seattle Children’s priorities, four marked for immediate pursuit. Shown for context; not counted as coverage.",
+  acc:[], proof:"", refs:"",
+  uses:[["Digital front door and patient navigation","Immediate",["amb"]],["Referral and care coordination","Immediate",["amb","hie"]],["Perioperative capacity and flow","Immediate",["acute"]],["Behavioral-health access","Immediate",["bh"]],["Prior authorization management","Near term",["rcm"]],["Population health and care gaps","Near term",["idn"]],["Remote monitoring and complex care","Near term",["home"]],["Referral patterning and network optimization","Foundation",["idn"]]]}
+];
+OFFERS.forEach(o=>{ if(o.uses) o.segs=[...new Set(o.uses.flatMap(u=>u[2]))]; });
+const TARGETS = new Set(["Cambia Health Solutions","Fred Hutch Cancer Center","Moda Health","MultiCare Health System","PeaceHealth","Premera Blue Cross","Providence","UW Medicine"]);
+const TARGETS_MISSING = ["Delta Dental of Washington","Samaritan Health Services","Seattle Children’s"];
+
+const NOTES = [
+ {title:"Moved", lede:"Segments placed under a category whose definition fits better.", items:[
+  ["Contract research organization (CRO)","Coverage and payment → Life sciences. A CRO runs trials for sponsors; it does not finance or administer benefits."],
+  ["Contract development and manufacturing organization (CDMO)","Governance and oversight → Life sciences. A CDMO manufactures for sponsors; it does not regulate."],
+  ["Government payer / public program administrator","Governance and oversight → Coverage and payment, with its oversight role noted in the detail panel."],
+  ["Medical device and digital therapeutics company","Technology and infrastructure → Life sciences, which is defined as covering therapies and devices."],
+  ["Healthcare supply chain, distributor, and GPO","Consumer and digital → Technology and infrastructure, which is defined as covering supply chains."]
+ ]},
+ {title:"Fixed", lede:"Layout and content issues resolved in the rebuild.", items:[
+  ["Three unattached data boxes","Assigned by content: R&D data to pharma/biotech, trial operations data to CRO, device telemetry and post-market data to device companies."],
+  ["Offset data boxes in Coverage and payment","Realigned by content; for example, the pharmacy-claims box now sits with the PBM rather than the TPA."],
+  ["Crossing dependency arrows","Replaced with explicit segment-to-standard links you can trace from either side in the map or read in the matrix."],
+  ["Payer description typo","“Coverage & PaymentCommercial insurers” corrected and condensed."]
+ ]},
+ {title:"Flagged for review", lede:"Kept as drawn, but worth a decision with the board owner.", items:[
+  ["Life sciences sits inside the Provider circle","Most ecosystem taxonomies treat life sciences as an adjacent industry. It may fit better under Support or as its own zone."],
+  ["Pharmacy and specialty pharmacy is under Life sciences","Dispensing pharmacies usually sit in Care delivery, with PBMs on the payer side."],
+  ["Northwest Kidney Centers is listed under Public health and community","It is primarily a dialysis provider; Care delivery may be a better home."],
+  ["Oregon Health Authority appears twice","Listed in both Public health and Governance. Kept, since it plays both roles."],
+  ["Governance and oversight is thin","After the moves it has one segment. Licensing boards, price-transparency bodies, and HTA groups are candidates."],
+  ["Dependency links are reconstructed","Built from the board’s arrows plus standard domain practice. Validate with Caleb before client use."]
+ ]},
+ {title:"Offerings layer", lede:"How the firm’s offerings were placed on the ecosystem.", items:[
+  ["Source","Slides in the “Pariveda GTM Strategy and Sales Plays” frame: the HCLS use-case table, the five coverage areas, the owned-lakehouse briefing, and the Seattle Children’s use cases."],
+  ["Segment placement is an interpretation","The slides use six HCLS segments, not this taxonomy. Each offering was placed on the segments its capabilities describe. Validate with the GTM owners."],
+  ["Coverage counts six offerings","AI governance applies everywhere, so it is excluded from gap shading. Seattle Children’s use cases are a pursuit, not an offering, so they are shown but not counted."],
+  ["Positioning tension","Payer and life sciences offerings sit next to a slide saying the firm is not a payer analytics house or a pharma R&D firm. Both are marked with a caveat in their detail panels."],
+  ["Partner alignment","All mapped accelerators are AWS. A Databricks GTM play appears under account ownership but no Databricks offering is mapped."],
+  ["Target accounts","Eight of the 11 Seattle healthcare target accounts appear as example organizations and are marked. Delta Dental of Washington, Samaritan Health Services, and Seattle Children’s are not on the map. UW Medical Center is matched to UW Medicine."]
+ ]},
+ {title:"Left out", lede:"Content on or near the frame that is not part of the taxonomy.", items:[
+  ["Seattle Children’s Needs cluster","Six client-specific priorities (access and capacity, behavioral health scale, distributed care, financial stewardship, high reliability, research-to-care) sit beside the map. They read as a separate client lens, not ecosystem structure."],
+  ["Standards not on the board","Nothing new was added, such as NEMSIS for EMS or MedDRA for safety reporting."]
+ ]}
+];
+
+/* ---------- Indexes ---------- */
+const SEG = {}; const USED = {};
+Object.keys(STD).forEach(k=>USED[k]=[]);
+CATS.forEach(c=>c.segs.forEach(s=>{s.cat=c; SEG[s.id]=s; s.s.forEach(k=>USED[k].push(s.id));}));
+const OFF_BY_SEG = {}, PUR_BY_SEG = {};
+Object.keys(SEG).forEach(id=>{OFF_BY_SEG[id]=[];PUR_BY_SEG[id]=[];});
+OFFERS.forEach(o=>o.segs.forEach(id=>(o.kind==="pursuit"?PUR_BY_SEG:OFF_BY_SEG)[id].push(o.id)));
+const OFF = Object.fromEntries(OFFERS.map(o=>[o.id,o]));
+const COVERED = Object.keys(SEG).filter(id=>OFF_BY_SEG[id].length).length;
+const esc = t => String(t).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const zc = z => `var(--${z})`;
+
+document.getElementById("lede").textContent =
+  `${CATS.length} categories, ${Object.keys(SEG).length} segments, and the ${Object.keys(STD).length} standards that connect them. Select a segment, standard, or offering to trace the connections.`;
+
+/* ---------- Render map ---------- */
+function renderMap(){
+  const map = document.getElementById("map"); let html = offerHTML();
+  ["provider","shared","payer"].forEach(z=>html += zoneHTML(z));
+  html += spineHTML();
+  html += zoneHTML("support");
+  map.innerHTML = html;
+}
+function offerHTML(){
+  return `<section class="offer" aria-label="Our offerings">
+    <div class="offer-head"><h2>Our offerings</h2><p>${COVERED} of ${Object.keys(SEG).length} segments are served by at least one offering. Select an offering to see where it lands.</p>
+    <button type="button" class="gap-toggle" id="gapToggle" aria-pressed="false">Show coverage gaps</button></div>
+    <div class="ochips">${OFFERS.map(o=>`<button type="button" class="ochip" data-off="${o.id}" data-kind="${o.kind}" aria-pressed="false" title="${esc(o.area)}">${esc(o.name)}<span class="c">${o.kind==="horizontal"?"all":o.segs.length}</span></button>`).join("")}</div></section>`;
+}
+function zoneHTML(z){
+  const cats = CATS.filter(c=>c.zone===z);
+  return `<section class="zone" data-zone="${z}" aria-label="${esc(ZONES[z].name)}">
+    <div class="zone-head"><h2>${esc(ZONES[z].name)}</h2><p>${esc(ZONES[z].desc)}</p></div>
+    <div class="zone-body">${cats.map(catHTML).join("")}</div></section>`;
+}
+function catHTML(c){
+  return `<article class="cat"><h3>${esc(c.name)}</h3><p class="def">${esc(c.def)}</p>
+    <ul class="orgs" aria-label="Example organizations">${c.orgs.map(o=>`<li${TARGETS.has(o)?' class="tgt" title="Seattle target account"':""}>${esc(o)}</li>`).join("")}</ul>
+    <ul class="segs">${c.segs.map(s=>`<li><button type="button" class="seg" data-seg="${s.id}" data-cov="${OFF_BY_SEG[s.id].length}" aria-pressed="false">
+      <span class="n">${esc(s.n)}</span><span class="ports" aria-label="${s.s.length} standards">${s.s.map(()=>"<i></i>").join("")}</span>
+      <span class="d">${esc(s.d)}</span>${s.moved?`<span class="moved">${esc(s.moved)}</span>`:""}<span class="offc">${OFF_BY_SEG[s.id].length?OFF_BY_SEG[s.id].map(()=>"<i></i>").join("")+`<em>${OFF_BY_SEG[s.id].map(k=>esc(OFF[k].name)).join(", ")}</em>`:"<em>No offering</em>"}</span></button></li>`).join("")}</ul></article>`;
+}
+function spineHTML(){
+  return `<section class="spine" aria-label="Standards">
+    <div class="spine-head"><h2>Standards backbone</h2><p>Dot count on each segment shows how many standards it depends on.</p></div>
+    <div class="groups">${Object.entries(GROUPS).map(([g,label])=>`<div class="group"><h4>${esc(label)}</h4><div class="chips">
+      ${Object.entries(STD).filter(([,v])=>v.g===g).map(([k,v])=>`<button type="button" class="chip" data-std="${k}" aria-pressed="false" title="${esc(v.desc)}">${esc(v.name)}<span class="c">${USED[k].length}</span></button>`).join("")}
+    </div></div>`).join("")}</div></section>`;
+}
+
+/* ---------- Render matrix ---------- */
+function renderMatrix(){
+  const keys = Object.keys(GROUPS).flatMap(g=>Object.keys(STD).filter(k=>STD[k].g===g));
+  const gstart = new Set(Object.keys(GROUPS).map(g=>keys.find(k=>STD[k].g===g)));
+  let h = `<thead><tr><th class="rh" scope="col">Segment</th><th scope="col" class="offcol">Our offerings</th>${keys.map(k=>`<th scope="col" data-col="${k}" class="${gstart.has(k)?"gstart":""}"><button type="button" data-std="${k}" title="${esc(STD[k].name)}">${esc(STD[k].short)}</button></th>`).join("")}<th scope="col" class="tot">Standards</th></tr></thead><tbody>`;
+  CATS.forEach(c=>{
+    h += `<tr class="cat-row" style="--zc:${zc(c.zone)};--zt:var(--${c.zone}-t)"><th colspan="${keys.length+3}" scope="colgroup">${esc(c.name)}</th></tr>`;
+    c.segs.forEach(s=>{
+      h += `<tr class="row" data-row="${s.id}" style="--zc:${zc(c.zone)}"><th class="rh" scope="row"><button type="button" data-seg="${s.id}">${esc(s.n)}</button></th>
+        <td class="offcol${OFF_BY_SEG[s.id].length?"":" none"}"><button type="button" class="offbtn" data-offmodal="${s.id}" aria-haspopup="dialog" aria-label="${OFF_BY_SEG[s.id].length} offerings for ${esc(s.n)}">${OFF_BY_SEG[s.id].length?`<b>${OFF_BY_SEG[s.id].length}</b> ${OFF_BY_SEG[s.id].length===1?"offering":"offerings"}`:"None"}</button></td>
+        ${keys.map(k=>`<td data-col="${k}" class="${gstart.has(k)?"gstart":""}">${s.s.includes(k)?`<span class="dot" role="img" aria-label="Uses ${esc(STD[k].short)}"></span>`:""}</td>`).join("")}
+        <td class="tot">${s.s.length}</td></tr>`;
+    });
+  });
+  h += `</tbody>`;
+  document.getElementById("mx").innerHTML = h;
+}
+
+/* ---------- Render notes ---------- */
+function renderNotes(){
+  document.getElementById("notes").innerHTML = NOTES.map(b=>`<section class="nblock"><h2>${esc(b.title)}</h2><p>${esc(b.lede)}</p><ul>
+    ${b.items.map(([t,d])=>`<li><b>${esc(t)}</b><span>${esc(d)}</span></li>`).join("")}</ul></section>`).join("");
+}
+
+/* ---------- Panel ---------- */
+const panel = document.getElementById("panel");
+function panelDefault(){
+  panel.style.removeProperty("--pc");
+  panel.innerHTML = `<button type="button" class="close" data-close>Close</button>
+    <p class="kicker">How to read this</p><h2>Who holds which data, and what connects them</h2>
+    <p>Each zone groups categories of organizations. Each segment lists the data it typically holds. The dark band in the middle holds the interoperability and terminology standards that link them.</p>
+    <div class="stat"><div><b>${Object.keys(SEG).length}</b>segments</div><div><b>${Object.keys(STD).length}</b>standards</div><div><b>${CATS.reduce((a,c)=>a+c.orgs.length,0)}</b>example orgs</div></div>
+    <h3>Offering coverage</h3><p><b style="color:var(--off)">${COVERED} of ${Object.keys(SEG).length}</b> segments are served by at least one offering. Turn on <em>Show coverage gaps</em> to shade the rest.</p>
+    <p>Marked organizations are Seattle target accounts. Not on the map: ${TARGETS_MISSING.map(esc).join(", ")}.</p>
+    <h3>Zones</h3><ul class="legend">${Object.entries(ZONES).map(([z,v])=>`<li><span class="sw" style="background:${zc(z)}"></span>${esc(v.name)}</li>`).join("")}
+    <li><span class="sw" style="background:var(--std)"></span>Standard in use by the current selection</li>
+    <li><span class="sw" style="background:var(--off)"></span>Our offering, or a Seattle target account</li></ul>
+    <h3>Most relied-on standards</h3><ul class="plist">${Object.keys(STD).sort((a,b)=>USED[b].length-USED[a].length).slice(0,5).map(k=>`<li><button type="button" data-std="${k}">${esc(STD[k].name)}</button><span class="s">${USED[k].length} segments</span></li>`).join("")}</ul>`;
+}
+function panelSeg(id){
+  const s = SEG[id], c = s.cat;
+  panel.style.setProperty("--pc", zc(c.zone));
+  panel.innerHTML = `<button type="button" class="close" data-close>Close</button>
+    <p class="kicker">${esc(ZONES[c.zone].name)} / ${esc(c.name)}</p><h2>${esc(s.n)}</h2>
+    <h3>Data held</h3><p class="data">${esc(s.d)}</p>
+    <h3>Depends on ${s.s.length} standard${s.s.length===1?"":"s"}</h3>
+    ${s.s.length?`<ul class="plist">${s.s.map(k=>`<li><button type="button" data-std="${k}">${esc(STD[k].name)}</button><span class="s">${esc(STD[k].desc)}</span></li>`).join("")}</ul>`:`<p>None mapped on the board.</p>`}
+    <h3>Our offerings</h3>${OFF_BY_SEG[id].length?`<ul class="plist">${OFF_BY_SEG[id].map(k=>`<li><button type="button" data-off="${k}">${esc(OFF[k].name)}</button><span class="s">${esc(OFF[k].desc)}</span></li>`).join("")}</ul>`:`<p>No offering mapped. AI governance and enablement still applies.</p>`}
+    ${PUR_BY_SEG[id].length?`<p>Also in scope for the Seattle Children’s pursuit: ${OFF.sch.uses.filter(u=>u[2].includes(id)).map(u=>esc(u[0])).join("; ")}.</p>`:""}
+    <h3>Example organizations in ${esc(c.name.toLowerCase())}</h3><ul class="ptags">${c.orgs.map(o=>`<li${TARGETS.has(o)?' style="background:var(--off-t);color:var(--off);font-weight:700"':""}>${esc(o)}${TARGETS.has(o)?" (target)":""}</li>`).join("")}</ul>
+    ${s.note?`<div class="note">${esc(s.note)}</div>`:""}`;
+}
+function panelStd(k){
+  const v = STD[k]; panel.style.setProperty("--pc","var(--std)");
+  const byCat = CATS.map(c=>({c, segs:c.segs.filter(s=>s.s.includes(k))})).filter(x=>x.segs.length);
+  panel.innerHTML = `<button type="button" class="close" data-close>Close</button>
+    <p class="kicker">${esc(GROUPS[v.g])}</p><h2>${esc(v.name)}</h2><p class="data">${esc(v.desc)}</p>
+    <h3>Relied on by ${USED[k].length} segments across ${byCat.length} categories</h3>
+    ${byCat.map(x=>`<p class="kicker" style="color:${zc(x.c.zone)};margin-top:10px">${esc(x.c.name)}</p><ul class="plist">${x.segs.map(s=>`<li><button type="button" data-seg="${s.id}">${esc(s.n)}</button></li>`).join("")}</ul>`).join("")}`;
+}
+
+function panelOff(k){
+  const o = OFF[k]; panel.style.setProperty("--pc","var(--off)");
+  const byCat = CATS.map(c=>({c, segs:c.segs.filter(s=>o.segs.includes(s.id))})).filter(x=>x.segs.length);
+  let h = `<button type="button" class="close" data-close>Close</button>
+    <p class="kicker">${esc(o.area)}</p><h2>${esc(o.name)}</h2><p class="data">${esc(o.desc)}</p>`;
+  if(o.uses) h += `<h3>Use cases</h3><ul class="plist tl">${o.uses.map(u=>`<li><span class="pri">${esc(u[1])}</span><span>${esc(u[0])}<span class="s">${u[2].map(id=>esc(SEG[id].n)).join("; ")}</span></span></li>`).join("")}</ul>`;
+  if(o.proof) h += `<h3>Proof points</h3><p>${esc(o.proof)}</p>`;
+  if(o.refs) h += `<p>References: ${esc(o.refs)}</p>`;
+  if(o.acc.length) h += `<h3>Pariveda / AWS accelerators</h3><ul class="ptags acc">${o.acc.map(a=>`<li>${esc(a)}</li>`).join("")}</ul>`;
+  if(o.kind==="horizontal") h += `<h3>Where it applies</h3><p>Every segment. Excluded from coverage gap shading.</p>`;
+  else h += `<h3>Lands on ${o.segs.length} segment${o.segs.length===1?"":"s"}</h3>${byCat.map(x=>`<p class="kicker" style="color:${zc(x.c.zone)};margin-top:10px">${esc(x.c.name)}</p><ul class="plist">${x.segs.map(s=>`<li><button type="button" data-seg="${s.id}">${esc(s.n)}</button></li>`).join("")}</ul>`).join("")}`;
+  if(o.caveat) h += `<div class="note">${esc(o.caveat)}</div>`;
+  panel.innerHTML = h;
+}
+
+/* ---------- Offerings modal ---------- */
+const om = document.getElementById("om");
+function openOffModal(id){
+  const s = SEG[id], c = s.cat, ids = OFF_BY_SEG[id];
+  const uses = OFF.sch.uses.filter(u=>u[2].includes(id));
+  document.getElementById("om-head").innerHTML = `<button type="button" class="om-x" data-omclose>Close</button>
+    <p class="kicker" style="color:${zc(c.zone)}">${esc(ZONES[c.zone].name)} / ${esc(c.name)}</p>
+    <h2 id="om-title">${esc(s.n)}</h2>
+    <p>${ids.length ? `${ids.length} offering${ids.length===1?"":"s"} map to this segment.` : "No offering maps to this segment."}</p>`;
+  let b = ids.length ? ids.map(k=>{const o=OFF[k]; return `<article class="om-card"><h3>${esc(o.name)}</h3><p class="area">${esc(o.area)}</p><p>${esc(o.desc)}</p>
+      ${o.proof?`<p><b>Proof:</b> ${esc(o.proof)}</p>`:""}
+      ${o.acc.length?`<ul class="acc" aria-label="Accelerators">${o.acc.map(a=>`<li>${esc(a)}</li>`).join("")}</ul>`:""}
+      ${o.caveat?`<p class="note">${esc(o.caveat)}</p>`:""}
+      <button type="button" class="om-go" data-omgo="${o.id}">Show on map</button></article>`;}).join("")
+    : `<p class="om-empty">This is a coverage gap. AI governance and enablement still applies, as it does to every segment.</p>`;
+  if(uses.length) b += `<p class="om-sub">In scope for the Seattle Children’s pursuit</p><ul class="plist">${uses.map(u=>`<li>${esc(u[0])}<span class="s">${esc(u[1])}</span></li>`).join("")}</ul>`;
+  document.getElementById("om-body").innerHTML = b;
+  om.showModal();
+}
+om.addEventListener("click", e=>{
+  if(e.target===om || e.target.closest("[data-omclose]")){ om.close(); return; }
+  const go = e.target.closest("[data-omgo]");
+  if(go){ om.close(); setView("map"); sel=null; select({t:"off", id:go.dataset.omgo}); document.querySelector(`.ochip[data-off="${go.dataset.omgo}"]`).scrollIntoView({behavior:"smooth",block:"center"}); }
+});
+
+/* ---------- State ---------- */
+let sel = null; // {t:'seg'|'std', id}
+function apply(state, lock){
+  const segBtns = document.querySelectorAll(".seg"), chips = document.querySelectorAll(".chip");
+  const map = document.getElementById("map"), spine = document.querySelector(".spine"), offer = document.querySelector(".offer");
+  document.querySelectorAll(".ochip").forEach(b=>{b.classList.remove("lit","sel"); b.setAttribute("aria-pressed","false");});
+  document.querySelectorAll(".mx tr.row.offhi").forEach(e=>e.classList.remove("offhi"));
+  offer.classList.toggle("dim", !!state && state.t!=="std");
+  segBtns.forEach(b=>{b.classList.remove("lit","sel"); b.setAttribute("aria-pressed","false");});
+  chips.forEach(b=>{b.classList.remove("lit","sel"); b.setAttribute("aria-pressed","false");});
+  document.querySelectorAll(".mx .colhi").forEach(e=>e.classList.remove("colhi"));
+  document.querySelectorAll(".mx tr.row.sel").forEach(e=>e.classList.remove("sel"));
+  map.dataset.mode = state ? state.t : ""; map.classList.toggle("dim", !!state); spine.classList.toggle("dim", !!state && state.t!=="off");
+  if(state){
+    if(state.t==="seg"){
+      const s = SEG[state.id];
+      document.querySelectorAll(`.seg[data-seg="${state.id}"]`).forEach(b=>{b.classList.add("sel");b.setAttribute("aria-pressed","true");});
+      s.s.forEach(k=>document.querySelectorAll(`.chip[data-std="${k}"]`).forEach(b=>b.classList.add("lit")));
+      const row = document.querySelector(`.mx tr.row[data-row="${state.id}"]`); if(row) row.classList.add("sel");
+      [...OFF_BY_SEG[state.id], ...PUR_BY_SEG[state.id], "aigov"].forEach(k=>document.querySelectorAll(`.ochip[data-off="${k}"]`).forEach(b=>b.classList.add("lit")));
+    } else if(state.t==="off"){
+      const o = OFF[state.id];
+      document.querySelectorAll(`.ochip[data-off="${state.id}"]`).forEach(b=>{b.classList.add("sel");b.setAttribute("aria-pressed","true");});
+      const ids = o.kind==="horizontal" ? Object.keys(SEG) : o.segs;
+      ids.forEach(id=>{document.querySelectorAll(`.seg[data-seg="${id}"]`).forEach(b=>b.classList.add("lit")); const r=document.querySelector(`.mx tr.row[data-row="${id}"]`); if(r) r.classList.add("offhi");});
+    } else {
+      document.querySelectorAll(`.chip[data-std="${state.id}"]`).forEach(b=>{b.classList.add("sel");b.setAttribute("aria-pressed","true");});
+      USED[state.id].forEach(id=>document.querySelectorAll(`.seg[data-seg="${id}"]`).forEach(b=>b.classList.add("lit")));
+      document.querySelectorAll(`.mx [data-col="${state.id}"]`).forEach(e=>e.classList.add("colhi"));
+    }
+  }
+  if(lock){
+    if(!state) panelDefault(); else if(state.t==="seg") panelSeg(state.id); else if(state.t==="off") panelOff(state.id); else panelStd(state.id);
+    document.getElementById("clear").hidden = !state;
+  }
+}
+function select(state){
+  if(sel && state && sel.t===state.t && sel.id===state.id) state = null;
+  sel = state; apply(sel, true);
+  panel.classList.toggle("open", !!sel);
+}
+
+document.addEventListener("click", e=>{
+  if(om.contains(e.target)) return;
+  const mb = e.target.closest("[data-offmodal]"); if(mb){ openOffModal(mb.dataset.offmodal); return; }
+  if(e.target.closest("[data-close]")){ panel.classList.remove("open"); return; }
+  if(e.target.closest("#gapToggle")){ const b=document.getElementById("gapToggle"); const on=b.getAttribute("aria-pressed")!=="true"; b.setAttribute("aria-pressed",String(on)); b.textContent = on?"Hide coverage gaps":"Show coverage gaps"; document.getElementById("map").classList.toggle("gaps",on); return; }
+  const ob = e.target.closest("[data-off]"); if(ob){ select({t:"off", id:ob.dataset.off}); return; }
+  const sb = e.target.closest("[data-seg]"); const cb = e.target.closest("[data-std]");
+  if(sb){ select({t:"seg", id:sb.dataset.seg}); return; }
+  if(cb){ select({t:"std", id:cb.dataset.std}); return; }
+  const vb = e.target.closest("[data-view]");
+  if(vb){ setView(vb.dataset.view); }
+});
+const hoverable = window.matchMedia("(hover:hover)").matches;
+if(hoverable){
+  document.addEventListener("mouseover", e=>{
+    if(sel) return;
+    const sb = e.target.closest(".seg"); const cb = e.target.closest(".chip"); const ob = e.target.closest(".ochip");
+    if(ob) apply({t:"off", id:ob.dataset.off}, false);
+    else if(sb) apply({t:"seg", id:sb.dataset.seg}, false);
+    else if(cb) apply({t:"std", id:cb.dataset.std}, false);
+  });
+  document.addEventListener("mouseout", e=>{
+    if(sel) return;
+    const from = e.target.closest(".seg,.chip,.ochip"); const to = e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest(".seg,.chip,.ochip");
+    if(from && from!==to) apply(null, false);
+  });
+}
+document.getElementById("clear").addEventListener("click", ()=>select(null));
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && sel && !om.open) select(null); });
+
+/* ---------- Views ---------- */
+function setView(v){
+  document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.view===v)));
+  ["map","matrix","notes"].forEach(n=>document.getElementById("view-"+n).hidden = n!==v);
+  try{ localStorage.setItem("hce-view", v); }catch(_){}
+}
+
+/* ---------- Search ---------- */
+document.getElementById("q").addEventListener("input", e=>{
+  const q = e.target.value.trim().toLowerCase();
+  CATS.forEach(c=>c.segs.forEach(s=>{
+    const hay = (s.n+" "+s.d+" "+c.name+" "+c.orgs.join(" ")+" "+s.s.map(k=>STD[k].name).join(" ")+" "+OFF_BY_SEG[s.id].map(k=>OFF[k].name).join(" ")).toLowerCase();
+    const hit = !q || hay.includes(q);
+    document.querySelectorAll(`.seg[data-seg="${s.id}"]`).forEach(b=>b.classList.toggle("nomatch", !hit));
+    const row = document.querySelector(`.mx tr.row[data-row="${s.id}"]`); if(row) row.hidden = !hit;
+  }));
+});
+
+renderMap(); renderMatrix(); renderNotes(); panelDefault();
+let start = "map"; try{ const v = localStorage.getItem("hce-view"); if(["map","matrix","notes"].includes(v)) start = v; }catch(_){}
+setView(start);
+</script>
+</body>
+</html>

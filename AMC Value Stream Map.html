@@ -1,0 +1,642 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>AMC Value Stream Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: lean worksheet. Header + state controls, metrics strip, full-width blueprint map (control lane, info flow, process flow, data boxes, timeline ladder), then step detail beside the ranked lever table. */
+:root{
+  --paper:#F1F4F6; --surface:#FFFFFF; --surface-2:#E7EDF1; --ink:#14212B; --ink-2:#3C4C58; --muted:#5B6B77; --line:#CAD4DB;
+  --grid:rgba(31,90,140,.07); --shadow:rgba(20,33,43,.12);
+  --accent:#1F5A8C; --accent-soft:#DDE8F2; --accent-line:#A9C3DA; --accent-ring:rgba(31,90,140,.18);
+  --wait:#B0600B; --wait-soft:#F7E8D4; --on-wait:#FFFFFF;
+  --good:#2B7A4B; --good-soft:#DCEFE2; --bad:#B23A2A;
+  --kaizen:#C2412D; --kaizen-soft:#FCE4DF;
+  --t-ai:#6A4FC2; --t-an:#0E7C7B; --t-au:#1F5A8C; --t-pr:#7C6A55;
+  --f-disp:"Archivo Narrow","Roboto Condensed","Arial Narrow",sans-serif;
+  --f-body:"Public Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E151B; --surface:#151F27; --surface-2:#1D2932; --ink:#E2E9EE; --ink-2:#B9C6CF; --muted:#8E9EAA; --line:#2C3B46;
+    --grid:rgba(121,174,219,.06); --shadow:rgba(0,0,0,.4);
+    --accent:#79AEDB; --accent-soft:#1A2D3D; --accent-line:#34536E; --accent-ring:rgba(121,174,219,.25);
+    --wait:#E3A250; --wait-soft:#3A2A16; --on-wait:#1A1206;
+    --good:#62C189; --good-soft:#163024; --bad:#EE7D6B;
+    --kaizen:#F07A62; --kaizen-soft:#3B1D18;
+    --t-ai:#A893EE; --t-an:#4FC1BE; --t-au:#79AEDB; --t-pr:#BBA68C;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E151B; --surface:#151F27; --surface-2:#1D2932; --ink:#E2E9EE; --ink-2:#B9C6CF; --muted:#8E9EAA; --line:#2C3B46;
+  --grid:rgba(121,174,219,.06); --shadow:rgba(0,0,0,.4);
+  --accent:#79AEDB; --accent-soft:#1A2D3D; --accent-line:#34536E; --accent-ring:rgba(121,174,219,.25);
+  --wait:#E3A250; --wait-soft:#3A2A16; --on-wait:#1A1206;
+  --good:#62C189; --good-soft:#163024; --bad:#EE7D6B;
+  --kaizen:#F07A62; --kaizen-soft:#3B1D18;
+  --t-ai:#A893EE; --t-an:#4FC1BE; --t-au:#79AEDB; --t-pr:#BBA68C;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:15px/1.5 var(--f-body)}
+.wrap{max-width:1440px;margin:0 auto;padding-inline:clamp(16px,3vw,40px);padding-block:28px 48px;display:grid;gap:22px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Header */
+.eyebrow{font:600 12px/1 var(--f-disp);letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(28px,3.4vw,42px)/1.05 var(--f-disp);margin:10px 0 6px;text-wrap:balance}
+.scope{color:var(--muted);max-width:70ch;margin:0}
+.controls{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-top:18px}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--surface-2);border-radius:8px;padding:3px;gap:2px}
+.seg button{appearance:none;border:0;background:transparent;font:600 14.5px/1 var(--f-disp);letter-spacing:.02em;color:var(--muted);padding:9px 14px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-selected="true"],.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px var(--shadow)}
+.mode-dot{width:8px;height:8px;border-radius:50%;background:var(--wait)}
+.mode-dot.fut{background:var(--good)}
+
+/* Metrics */
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--ink);border-bottom:1px solid var(--line)}
+.metric{padding:14px 18px 16px;border-left:1px solid var(--line);display:grid;gap:4px;align-content:start}
+.metric:first-child{border-left:0;padding-left:0}
+.m-label{font:600 12px/1.2 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.m-val{font:700 34px/1 var(--f-disp);font-variant-numeric:tabular-nums}
+.m-sub{font:12.5px/1.4 var(--f-mono);color:var(--muted)}
+.m-sub .good{color:var(--good)} .m-sub .bad{color:var(--bad)}
+.m-help{font-size:12px;color:var(--muted)}
+@media (max-width:760px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric:nth-child(3){border-left:0;padding-left:0}.metric:nth-child(n+3){border-top:1px solid var(--line)}}
+
+/* Map */
+.map-card{background-color:var(--surface);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.map-head{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--surface)}
+.map-head h2{font:700 17px/1 var(--f-disp);margin:0;letter-spacing:.02em}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:22px;height:18px}
+.lg-box{width:18px;height:13px;border:1.5px solid var(--ink);border-radius:2px;background:var(--surface)}
+.lg-push{width:22px;height:6px;background:repeating-linear-gradient(90deg,var(--ink) 0 4px,transparent 4px 7px)}
+.lg-lane{width:18px;height:13px;border:1.5px solid var(--accent);background:var(--accent-soft);border-radius:2px}
+.map-scroll{overflow-x:auto}
+.map{display:grid;row-gap:10px;padding:16px}
+.rl{font:600 10px/1.25 var(--f-disp);letter-spacing:.11em;text-transform:uppercase;color:var(--muted);align-self:center;padding-right:6px}
+.lane{border:1.5px solid var(--accent);background:var(--accent-soft);border-radius:4px;padding:8px 14px;display:flex;gap:4px 14px;align-items:baseline;flex-wrap:wrap;margin-inline:4px}
+.lane b{font:700 15px/1.2 var(--f-disp);color:var(--accent)}
+.lane span{font-size:13px;color:var(--ink-2)}
+.chips{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;position:relative;padding:14px 2px 0;min-width:0}
+.chips::before{content:"";position:absolute;top:-10px;left:50%;height:14px;border-left:1.5px dashed var(--accent)}
+.chip{font:500 10.5px/1.25 var(--f-mono);color:var(--accent);background:var(--surface);border:1px solid var(--accent-line);padding:3px 5px;border-radius:3px;text-align:center;max-width:100%;overflow-wrap:anywhere}
+.ext{align-self:center;min-width:0}
+.ext-body{background:var(--surface-2);clip-path:polygon(0 18px,25% 0,25% 18px,50% 0,50% 18px,75% 0,75% 18px,100% 0,100% 100%,0 100%);padding:26px 8px 10px;display:grid;gap:3px}
+.ext-k{font:600 10px/1 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.ext-body b{font:700 13.5px/1.15 var(--f-disp)}
+.ext-body span:last-child{font-size:11.5px;line-height:1.35;color:var(--ink-2)}
+.wait{position:relative;min-height:120px;min-width:0}
+.wait::before{content:"";position:absolute;left:0;right:10px;top:calc(50% - 3px);height:6px;background:repeating-linear-gradient(90deg,var(--ink) 0 5px,transparent 5px 8px)}
+.wait::after{content:"";position:absolute;right:0;top:calc(50% - 7px);border-left:11px solid var(--ink);border-top:7px solid transparent;border-bottom:7px solid transparent}
+.tri{position:absolute;left:50%;top:50%;transform:translate(-50%,-60%);width:34px;height:30px;overflow:visible}
+.tri polygon{fill:var(--wait-soft);stroke:var(--wait);stroke-width:2;stroke-linejoin:round}
+.tri text{fill:var(--wait);font:700 15px var(--f-disp)}
+.is-max .tri polygon{fill:var(--wait)} .is-max .tri text{fill:var(--on-wait)}
+.w-lab{position:absolute;top:calc(50% + 15px);left:0;right:0;text-align:center;font:500 11.5px/1.2 var(--f-mono);color:var(--wait);font-variant-numeric:tabular-nums}
+.w-was{position:absolute;top:calc(50% + 31px);left:0;right:0;text-align:center;font:10.5px/1.2 var(--f-mono);color:var(--muted);text-decoration:line-through}
+.proc{position:relative;align-self:center;text-align:left;border:1.5px solid var(--ink);background:var(--surface);border-radius:3px;padding:0;cursor:pointer;display:grid;align-content:start;min-height:96px;min-width:0;appearance:none;transition:box-shadow .15s,border-color .15s}
+.proc:hover{border-color:var(--accent)}
+.proc.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+.p-top{display:grid;gap:3px;padding:8px 10px 7px;border-bottom:1px solid var(--line)}
+.p-num{font:500 11px/1 var(--f-mono);color:var(--muted)}
+.p-name{font:700 14.5px/1.15 var(--f-disp);text-wrap:balance;padding-right:16px;hyphens:auto;overflow-wrap:break-word}
+.p-own{padding:6px 10px 8px;font-size:12px;line-height:1.3;color:var(--muted)}
+.burst{position:absolute;top:-12px;right:-9px;width:28px;height:28px}
+.burst svg{width:28px;height:28px;display:block}
+.burst polygon{fill:var(--kaizen-soft);stroke:var(--kaizen);stroke-width:1.5;stroke-linejoin:round}
+.burst circle{fill:var(--good-soft);stroke:var(--good);stroke-width:1.5}
+.burst path{fill:none;stroke:var(--good);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.dbox{border:1px solid var(--line);background:var(--surface);border-radius:3px;padding:6px 8px;display:grid;gap:4px;font:12px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;align-self:start;min-width:0}
+.dbox>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 6px;align-items:baseline}
+.dbox span{color:var(--muted)}
+.dbox b{font-weight:500;text-align:right}
+.dbox em,.vdata em{font-style:normal;font-size:11px;color:var(--good);margin-left:4px}
+.dbox em.bad,.vdata em.bad{color:var(--bad)}
+.dbox .dtype{justify-content:flex-start;font:12px/1.2 var(--f-body);color:var(--ink-2);border-top:1px dashed var(--line);padding-top:5px;gap:6px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.t-ai{background:var(--t-ai)} .t-an{background:var(--t-an)} .t-au{background:var(--t-au)} .t-pr{background:var(--t-pr)}
+.lad{height:52px;position:relative;font:500 11.5px/1 var(--f-mono);font-variant-numeric:tabular-nums;min-width:0}
+.lad span{position:absolute;left:0;right:0;text-align:center}
+.lad-w{border-top:2px solid var(--ink-2)} .lad-w span{top:7px;color:var(--wait)}
+.lad-p{border:2px solid var(--ink-2);border-top:0} .lad-p span{bottom:7px;color:var(--accent)}
+.lad-p.sel{background:var(--accent-soft)}
+.lad-end{border-top:2px solid var(--ink-2)}
+.lad-total{align-self:end;border:1.5px solid var(--ink);background:var(--surface);border-radius:3px;padding:8px 9px;display:grid;gap:2px;margin-bottom:-2px}
+.lad-total span{font:600 10px/1.2 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.lad-total b{font:500 13.5px/1.2 var(--f-mono);margin-bottom:4px}
+/* Vertical map for narrower containers */
+.map-v{grid-template-columns:minmax(0,1fr);row-gap:0}
+.map-v .lane{margin:0 0 12px}
+.vrow{display:grid;grid-template-columns:62px minmax(0,1fr);column-gap:12px}
+.vrail{position:relative;display:flex;align-items:center;justify-content:center;min-height:52px}
+.vrail-w::before,.vrail-a::before{content:"";position:absolute;top:0;bottom:0;left:50%;margin-left:-3px;width:6px;background:repeating-linear-gradient(180deg,var(--ink) 0 5px,transparent 5px 8px)}
+.vrail-a{min-height:0}
+.vrail-end::after{content:"";position:absolute;bottom:0;left:50%;margin-left:-7px;border-top:10px solid var(--ink);border-left:7px solid transparent;border-right:7px solid transparent}
+.vrail-p::before{content:"";position:absolute;top:0;bottom:0;left:50%;margin-left:-1px;width:2px;background:var(--ink-2)}
+.vrail-p span{position:relative;background:var(--surface);border:1px solid var(--accent-line);color:var(--accent);font:500 11px/1.2 var(--f-mono);padding:3px 4px;border-radius:3px;text-align:center;font-variant-numeric:tabular-nums}
+.tri.vtri{position:relative;left:auto;top:auto;transform:none;width:30px;height:27px}
+.vw-lab{align-self:center;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font:500 13px/1.3 var(--f-mono);color:var(--wait);font-variant-numeric:tabular-nums}
+.vw-k{font:600 10.5px/1 var(--f-disp);letter-spacing:.1em;text-transform:uppercase}
+.vw-lab .w-was{position:static;font-size:11.5px}
+.vext{background:var(--surface-2);border-radius:4px;padding:10px 12px;display:grid;gap:2px;margin-block:6px}
+.vext b{font:700 15px/1.2 var(--f-disp)}
+.vext span:last-child{font-size:12.5px;color:var(--ink-2)}
+.vproc{margin-block:4px;min-height:0;align-self:stretch}
+.vproc .p-own{padding-bottom:6px}
+.vchips{display:flex;flex-wrap:wrap;gap:4px;padding:0 10px 9px}
+.vdata{display:flex;flex-wrap:wrap;gap:4px 16px;padding:7px 10px 9px;border-top:1px solid var(--line);font:12px/1.3 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.vdata b{color:var(--ink);font-weight:500}
+.vtype{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-body);color:var(--ink-2)}
+.vtotal{display:flex;flex-wrap:wrap;gap:8px 22px;border:1.5px solid var(--ink);background:var(--surface);border-radius:3px;padding:10px 12px;margin-top:10px}
+.vtotal div{display:grid;gap:2px}
+.vtotal span{font:600 10px/1.2 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.vtotal b{font:500 15px/1.2 var(--f-mono)}
+.insight{margin:0;padding:14px 20px 16px;border-top:1px solid var(--line);background:var(--surface);font-size:14.5px;color:var(--ink-2);max-width:none}
+.insight strong{color:var(--ink);font-weight:600}
+
+/* Lower panels */
+.lower{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:22px;align-items:start}
+.panel{container-type:inline-size;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px 22px;display:grid;gap:16px;min-width:0}
+.panel h3{font:700 24px/1.1 var(--f-disp);margin:4px 0 4px;text-wrap:balance}
+.panel h4{font:600 12px/1 var(--f-disp);letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.meta{color:var(--muted);font-size:13.5px;margin:0}
+.sys{display:flex;flex-wrap:wrap;gap:6px}
+.edit-wrap{overflow-x:auto}
+
+table{border-collapse:collapse;width:100%}
+.edit{table-layout:fixed}
+.edit th,.edit td{padding:6px 6px;text-align:left;border-bottom:1px solid var(--line);font-size:13.5px;overflow-wrap:anywhere}
+.edit th:first-child{width:36%;padding-left:0}.edit td:nth-child(4),.edit th:nth-child(4){width:18%}
+.edit thead th{font:600 11.5px/1 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edit tbody th{font-weight:500}
+.edit input{width:100%;max-width:110px;min-width:0;font:500 14px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:6px 8px}
+.edit input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-ring)}
+.chg{font:500 13px var(--f-mono)} .chg.good{color:var(--good)} .chg.bad{color:var(--bad)}
+.row-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;font:600 13.5px/1 var(--f-disp);letter-spacing:.02em;cursor:pointer}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default;color:inherit;border-color:var(--line)}
+.status{font:12px var(--f-mono);color:var(--good)}
+.pains{margin:0;padding:0;list-style:none;display:grid;gap:7px}
+.pains li{display:grid;grid-template-columns:10px 1fr;gap:10px;font-size:14px;line-height:1.45}
+.pains li::before{content:"";width:8px;height:8px;margin-top:6px;background:var(--wait);border-radius:1px}
+.lever{background:var(--surface-2);border-radius:8px;padding:14px 16px;display:grid;gap:10px}
+.lever-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.tag{display:inline-flex;align-items:center;gap:6px;font:600 11.5px/1 var(--f-disp);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 9px}
+.lever b.lt{font:700 17px/1.2 var(--f-disp)}
+.lever p{margin:0;font-size:14px;max-width:68ch}
+.lever dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:13.5px}
+.lever dt{font:600 11px/1.6 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.lever dd{margin:0}
+.measure{margin:0;font-size:13.5px;color:var(--ink-2)}
+.measure b{font-weight:600;color:var(--ink)}
+.opp-head{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:baseline}
+.opp-wrap{overflow-x:auto}
+.opp th,.opp td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:13.5px}
+.opp thead th{font:600 11.5px/1 var(--f-disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.opp tbody tr{cursor:pointer}
+.opp tbody tr:hover,.opp tbody tr.sel{background:var(--surface-2)}
+.opp td.lv b{display:block;font-weight:600;line-height:1.3}
+.opp td.lv span{font-size:12.5px;color:var(--muted)}
+.opp td.ty{white-space:nowrap}
+.opp td.ty span{display:inline-flex;align-items:center;gap:6px}
+.sv{min-width:120px}
+.sv b{font:500 13px var(--f-mono);font-variant-numeric:tabular-nums;display:block;margin-bottom:5px}
+.bar{height:6px;background:var(--good);border-radius:3px;min-width:2px}
+.pill{display:inline-block;font:600 11.5px/1 var(--f-disp);letter-spacing:.04em;padding:4px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.opp tfoot td{font:500 13px var(--f-mono);border-bottom:0;padding-top:12px}
+@container (max-width:560px){
+  .opp thead{display:none}
+  .opp,.opp tbody,.opp tfoot,.opp tfoot tr{display:block}
+  .opp tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px 8px;padding:12px 6px;border-bottom:1px solid var(--line);align-items:center}
+  .opp td{border:0;padding:0}
+  .opp td.lv{grid-column:1/-1}
+  .opp td.sv{grid-column:1/-1;grid-row:3;min-width:0}
+  .opp tfoot td{display:block}
+}
+.note{font-size:12.5px;color:var(--muted);max-width:90ch;margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Academic Medical Center · Value stream map</div>
+    <h1 id="vs-name">Referral to First Specialty Visit</h1>
+    <p class="scope" id="vs-scope"></p>
+    <div class="controls">
+      <div class="seg" role="tablist" aria-label="Value stream" id="stream-tabs"></div>
+      <div class="seg" aria-label="Map state" id="state-toggle">
+        <button type="button" data-mode="cur" aria-pressed="true"><i class="mode-dot"></i>Current state</button>
+        <button type="button" data-mode="fut" aria-pressed="false"><i class="mode-dot fut"></i>Future state</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="metrics" id="metrics" aria-label="Stream metrics"></section>
+
+  <section class="map-card" aria-label="Value stream map">
+    <div class="map-head">
+      <h2 id="map-title">Current-state map</h2>
+      <div class="legend">
+        <span><i class="lg-lane"></i>Control point</span>
+        <span><i class="lg-box"></i>Process step</span>
+        <span><svg viewBox="0 0 38 34" class="lg-tri"><polygon points="19,2 36,32 2,32" style="fill:var(--wait-soft);stroke:var(--wait);stroke-width:2.5"/></svg>Queue / wait</span>
+        <span><i class="lg-push"></i>Push flow</span>
+        <span><svg viewBox="0 0 38 34"><polygon points="19,2 36,32 2,32" style="fill:var(--wait);stroke:var(--wait);stroke-width:2.5"/></svg>Largest queue</span>
+        <span id="lg-burst"></span>
+      </div>
+    </div>
+    <div class="map-scroll" id="map-scroll"><div class="map" id="map"></div></div>
+    <p class="insight" id="insight"></p>
+  </section>
+
+  <section class="lower">
+    <article class="panel" id="detail" aria-live="polite"></article>
+    <article class="panel">
+      <div class="opp-head">
+        <div>
+          <h4>Improvement levers</h4>
+          <h3 style="margin:0">Ranked by lead time removed</h3>
+        </div>
+        <div class="row-actions">
+          <button class="btn" type="button" id="copy-csv">Copy as CSV</button>
+          <span class="status" id="copy-status" role="status"></span>
+        </div>
+      </div>
+      <div class="opp-wrap"><table class="opp" id="opp-table"></table></div>
+      <div class="row-actions">
+        <button class="btn" type="button" id="reset-stream">Reset this stream to sample values</button>
+      </div>
+      <textarea id="csv-fallback" hidden readonly rows="6" style="width:100%;font:12px var(--f-mono);background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px"></textarea>
+    </article>
+  </section>
+
+  <p class="note">Sample values reflect typical academic medical center performance ranges and are not drawn from a specific institution. Replace them with client baselines from EHR event timestamps (each step lists its measurement source) or time studies. Select any step to edit its current and future values; edits are kept in this browser only. %C&amp;A is the share of work that arrives complete and accurate, so the next step can proceed without rework.</p>
+</div>
+
+<script>
+const U={min:1,h:60,d:1440}, UL={min:'min',h:'h',d:'d'}, STEP={min:1,h:0.5,d:0.25};
+const TYPES={AI:'t-ai',Analytics:'t-an',Automation:'t-au',Process:'t-pr'};
+const EFFORT={L:'Low',M:'Medium',H:'High'};
+
+const STREAMS=[
+{id:'referral',tab:'Specialty Access',name:'Referral to First Specialty Visit',
+ scope:'New outpatient referral to a specialty clinic such as neurology, from referral receipt to the completed first visit.',
+ wtUnit:'d',ptUnit:'min',ltUnit:'d',sumUnit:'d',
+ supplier:{name:'Referring providers',note:'~60% external community practices'},
+ customer:{name:'New patient',note:'~1,850 referrals / month'},
+ control:{name:'Central Access Center',note:'Referral work queues · scheduling templates · daily access huddle'},
+ insight:'Most lead time is queue time rather than work time. Intake rework from incomplete faxed referrals feeds every downstream step, and the appointment backlog absorbs any gains unless released slots are refilled.',
+ steps:[
+ {id:'intake',name:'Referral intake',owner:'Referral coordinator',systems:['eFax','EHR referral WQ','Direct / HIE'],
+  cur:{wt:3,pt:12,ca:55},fut:{wt:0.5,pt:4,ca:85},
+  pains:['About 45% of external referrals arrive by fax and are keyed manually','Missing clinical notes or demographics trigger call-backs to the referring office','Duplicate referrals are created when the same request arrives twice'],
+  measure:'Referral created to status "Received/Reviewed" timestamps; fax receipt logs.',
+  lever:{type:'AI',title:'Document AI referral intake',desc:'Extract demographics, diagnosis, reason for referral and attachments from faxed packets into structured referral fields, match to the MRN, and flag missing elements before the referral enters the queue.',stack:'Amazon Textract with LLM extraction on Amazon Bedrock; results landed in Delta tables and written back to the EHR via FHIR/HL7',kpi:'Referral completeness at first touch',effort:'M',readiness:'Medium'}},
+ {id:'auth',name:'Insurance verification & prior auth',owner:'Financial clearance',systems:['Payer portals','270/271 eligibility','Clearinghouse'],
+  cur:{wt:4,pt:25,ca:70},fut:{wt:1,pt:8,ca:90},
+  pains:['Eligibility is re-checked manually across multiple payer portals','Authorization requirements vary by payer and CPT, and staff rely on tribal knowledge','Visits are rescheduled when authorization is still pending on the visit day'],
+  measure:'Authorization request and decision timestamps; eligibility transaction logs.',
+  lever:{type:'Automation',title:'Rules-based clearance with auth prediction',desc:'Run batch eligibility automatically, predict whether prior authorization is required by payer, plan and service, and route only exceptions to staff.',stack:'Payer rules plus a classifier trained on historical authorization outcomes (Databricks ML, governed in Unity Catalog)',kpi:'Touchless clearance rate',effort:'M',readiness:'High'}},
+ {id:'triage',name:'Clinical triage',owner:'Specialty RN / APP',systems:['EHR In Basket','Outside records'],
+  cur:{wt:6,pt:15,ca:75},fut:{wt:1.5,pt:6,ca:90},
+  pains:['Clinicians read 20 to 60 pages of outside records to set urgency','About 1 in 4 referrals is routed to the wrong subspecialty or lacks required workup','Triage competes with clinical duties and backs up on clinic days'],
+  measure:'Referral reviewed to triage decision timestamps; reroute counts.',
+  lever:{type:'AI',title:'Referral summarization and triage suggestion',desc:'Generate a clinician-facing summary of the referral packet with a suggested urgency tier, subspecialty and pre-visit workup, which the triage clinician confirms or edits.',stack:'LLM summarization with retrieval over the packet (Amazon Bedrock or Databricks Model Serving); clinician sign-off in the EHR',kpi:'Referral-to-triage days; reroute rate',effort:'H',readiness:'Medium'}},
+ {id:'schedule',name:'Scheduling & outreach',owner:'Patient access scheduler',systems:['EHR scheduling','Telephony','Patient portal'],
+  cur:{wt:5,pt:18,ca:80},fut:{wt:1,pt:5,ca:92},
+  pains:['An average of 2.6 outbound call attempts per scheduled referral','Template rules make the right slot hard to find','Patients not reached in three attempts are closed and later re-referred'],
+  measure:'Triage complete to appointment made timestamps; call attempt logs.',
+  lever:{type:'Automation',title:'Digital self-scheduling with slot matching',desc:'Send a text or portal link offering only slots that match triage rules (provider, visit type, urgency window). Staff handle patients who do not self-schedule within 48 hours.',stack:'Slot-matching service on scheduling extracts; outreach via Amazon Connect or the EHR patient portal',kpi:'Share of referrals self-scheduled',effort:'M',readiness:'High'}},
+ {id:'prep',name:'Pre-visit preparation',owner:'Clinic staff / HIM',systems:['Records requests','Image exchange','Questionnaires'],
+  cur:{wt:21,pt:20,ca:65},fut:{wt:10,pt:8,ca:88},
+  pains:['Outside imaging is unavailable on the visit day for about a third of new patients','A 12 to 18% new-patient no-show rate leaves backlog slots unused','No systematic waitlist backfill when patients cancel'],
+  measure:'Appointment made to prep complete; no-show and cancellation rates by visit type.',
+  lever:{type:'Analytics',title:'No-show prediction and waitlist backfill',desc:'Score each new-patient appointment for no-show risk, target reminders and transport support, and offer released slots to waitlisted patients to recover backlog capacity.',stack:'No-show model on Databricks using scheduling, demographic and visit-history features; daily scores pushed to clinic work lists',kpi:'Third-next-available appointment (days)',effort:'M',readiness:'High'}},
+ {id:'visit',name:'First specialty visit',owner:'Attending / fellow',systems:['EHR documentation'],
+  cur:{wt:7,pt:45,ca:90},fut:{wt:4,pt:40,ca:94},
+  pains:['New-patient visits run long while outside records are reconciled','Faculty with teaching duties complete documentation after hours'],
+  measure:'Arrival to check-out timestamps; visit length by provider.',
+  lever:{type:'AI',title:'Ambient documentation',desc:'Capture the visit conversation and draft the note for physician review, returning time to patient care and to resident and fellow supervision.',stack:'Ambient AI vendor integrated with the EHR; adoption and outcome telemetry analyzed in the lakehouse',kpi:'Note completion time; visit length',effort:'L',readiness:'High'}}
+ ]},
+{id:'ed',tab:'ED Throughput',name:'ED Arrival to Inpatient Bed',
+ scope:'Admitted emergency department patients, from arrival to arrival on the inpatient unit.',
+ wtUnit:'min',ptUnit:'min',ltUnit:'h',sumUnit:'min',
+ supplier:{name:'Arriving patients',note:'EMS, walk-in and inter-facility transfers'},
+ customer:{name:'Admitted patient',note:'~260 ED visits / day · 24% admitted'},
+ control:{name:'Capacity Command Center',note:'Bed board · transfer center · capacity huddles every 4 hours'},
+ insight:'Boarding is the constraint. Most lead time accrues after the admission decision, so faster ED workups move the total less than earlier bed requests and better-timed discharges.',
+ steps:[
+ {id:'triage',name:'Arrival & triage',owner:'Triage RN',systems:['ED tracking board'],
+  cur:{wt:15,pt:8,ca:88},fut:{wt:8,pt:7,ca:92},
+  pains:['Acuity assignment varies by nurse and shift','Deterioration in the waiting room is detected late'],
+  measure:'Arrival to triage start and complete timestamps.',
+  lever:{type:'Analytics',title:'Triage decision support',desc:'Predict acuity and admission likelihood at triage from vitals, chief complaint and history, and flag early sepsis risk.',stack:'Near-real-time ADT and vitals feeds (HL7 streaming ingestion on Databricks); scores surfaced on the tracking board',kpi:'Door-to-triage; under-triage rate',effort:'M',readiness:'Medium'}},
+ {id:'eval',name:'Provider evaluation',owner:'ED attending / resident',systems:['EHR orders'],
+  cur:{wt:40,pt:20,ca:90},fut:{wt:25,pt:18,ca:92},
+  pains:['Door-to-provider time rises sharply during the afternoon surge','Resident supervision adds handoffs on complex cases'],
+  measure:'Triage complete to provider assigned timestamps.',
+  lever:{type:'Process',title:'Demand-matched provider staffing',desc:'Align attending and resident shifts to hourly arrival forecasts and run a provider-in-triage model during peak hours.',stack:'Time-series arrival forecast on historical ED volumes; staffing scenarios in a BI dashboard',kpi:'Door-to-provider (median and 90th percentile)',effort:'L',readiness:'High'}},
+ {id:'dx',name:'Diagnostics',owner:'Laboratory / Radiology',systems:['LIS','RIS / PACS'],
+  cur:{wt:95,pt:30,ca:92},fut:{wt:70,pt:28,ca:94},
+  pains:['The CT read queue mixes ED and inpatient studies without priority','Specimens are redrawn when hemolyzed or mislabeled'],
+  measure:'Order to result timestamps by modality and test.',
+  lever:{type:'AI',title:'Imaging worklist prioritization',desc:'Use FDA-cleared imaging AI to move suspected critical findings to the top of the radiologist worklist, and track turnaround by modality.',stack:'Vendor imaging AI integrated with PACS; turnaround analytics from RIS and LIS timestamps',kpi:'ED imaging order-to-result',effort:'M',readiness:'Medium'}},
+ {id:'decide',name:'Admission decision & consult',owner:'ED physician / hospitalist',systems:['Consult orders','Secure messaging'],
+  cur:{wt:60,pt:25,ca:80},fut:{wt:25,pt:15,ca:90},
+  pains:['The bed request waits for consult acceptance','Disagreement on the admitting service causes re-consults'],
+  measure:'Decision to admit to admit order and bed request timestamps.',
+  lever:{type:'Analytics',title:'Early bed request from admission prediction',desc:'Place a provisional bed request when predicted admission probability crosses a threshold, so bed planning starts before the formal decision.',stack:'Admission-likelihood model served in real time (Databricks Model Serving); alerts routed to the command center',kpi:'Decision-to-bed-request interval',effort:'M',readiness:'Medium'}},
+ {id:'bed',name:'Bed assignment',owner:'Bed management',systems:['Bed board','ADT'],
+  cur:{wt:150,pt:10,ca:75},fut:{wt:45,pt:5,ca:90},
+  pains:['Discharges cluster after 2 pm while admissions peak late morning','Bed status is updated manually and is often stale','Service and isolation rules limit bed matching'],
+  measure:'Bed request to bed assigned timestamps; discharge order to departure.',
+  lever:{type:'AI',title:'Capacity forecasting and discharge prediction',desc:'Forecast inpatient census by unit and predict likely discharges 24 to 48 hours ahead, so units prepare beds before demand arrives.',stack:'Census and length-of-stay models on the lakehouse; command-center dashboard refreshed every 15 minutes',kpi:'Boarding hours per admitted patient',effort:'H',readiness:'Medium'}},
+ {id:'transfer',name:'Bed turnover & transfer',owner:'EVS / transport / RN',systems:['EVS tasking','Transport dispatch'],
+  cur:{wt:75,pt:20,ca:85},fut:{wt:35,pt:15,ca:92},
+  pains:['Dirty-to-clean bed time exceeds 60 minutes on peak days','Nurse-to-nurse handoff is delayed by unit workload'],
+  measure:'Bed assigned to patient leaves ED to patient arrives on unit.',
+  lever:{type:'Automation',title:'Automated EVS dispatch and structured handoff',desc:'Dispatch bed cleaning automatically on discharge, prioritized by pending admissions, and generate a structured handoff summary for the receiving nurse.',stack:'Event-driven tasking from ADT events; LLM-drafted handoff summary reviewed by the sending RN',kpi:'Bed-clean turnaround; assign-to-depart',effort:'M',readiness:'High'}}
+ ]},
+{id:'rcm',tab:'Revenue Cycle',name:'Inpatient Discharge to Cash',
+ scope:'Inpatient encounters, from patient discharge to final payment posted.',
+ wtUnit:'d',ptUnit:'min',ltUnit:'d',sumUnit:'d',
+ supplier:{name:'Clinical departments',note:'Discharged inpatient encounters'},
+ customer:{name:'Health system finance',note:'~4,200 discharges / month'},
+ control:{name:'Revenue Integrity & PFS',note:'DNFB reporting · claim scrubber · denial work queues'},
+ insight:'Payer adjudication time is largely outside the institution’s control. The controllable queues are front-end documentation and coding (DNFB) and the denial loop, and teaching-physician attestation is a delay specific to academic settings.',
+ steps:[
+ {id:'doc',name:'Documentation & attestation',owner:'Attending / resident',systems:['EHR documentation'],
+  cur:{wt:2,pt:30,ca:80},fut:{wt:0.75,pt:20,ca:90},
+  pains:['Discharge summaries wait on teaching-physician attestation','Incomplete documentation holds the chart from coding'],
+  measure:'Discharge to discharge summary signed and attestation complete.',
+  lever:{type:'AI',title:'Drafted discharge summaries with attestation prompts',desc:'Draft discharge summaries from the encounter record and prompt teaching physicians to attest resident documentation within a set window.',stack:'LLM summarization of encounter data on Amazon Bedrock; deficiency aging tracked in lakehouse dashboards',kpi:'Discharge to signed summary (days)',effort:'M',readiness:'High'}},
+ {id:'cdi',name:'CDI review & queries',owner:'CDI specialist',systems:['CDI worklist','EHR queries'],
+  cur:{wt:1.5,pt:25,ca:75},fut:{wt:0.5,pt:15,ca:88},
+  pains:['CDI reviews about half of cases, and selection is not risk-based','Query responses from busy faculty take days'],
+  measure:'Case available to CDI review to query response timestamps.',
+  lever:{type:'AI',title:'NLP case prioritization for CDI',desc:'Score cases for likely missed comorbidities or severity indicators so CDI reviews the encounters most likely to change DRG assignment or risk adjustment.',stack:'Clinical NLP on notes and results (Databricks); prioritized worklist fed back to the CDI system',kpi:'Query rate on reviewed cases; case mix index',effort:'M',readiness:'Medium'}},
+ {id:'code',name:'Coding',owner:'HIM coder',systems:['Encoder','CAC'],
+  cur:{wt:3,pt:40,ca:88},fut:{wt:1,pt:20,ca:92},
+  pains:['The coding backlog keeps DNFB above target','Complex surgical and transplant cases take two to three times longer'],
+  measure:'Chart complete to final coded timestamps; DNFB days.',
+  lever:{type:'AI',title:'Autonomous coding for low-complexity encounters',desc:'Route straightforward encounters to autonomous or computer-assisted coding with confidence thresholds, so coders focus on complex cases and audit samples.',stack:'Vendor autonomous coding or LLM-assisted coding; accuracy audits sampled and tracked in the lakehouse',kpi:'DNFB days; coding accuracy',effort:'H',readiness:'Medium'}},
+ {id:'claim',name:'Charge reconciliation & claim edits',owner:'Revenue integrity',systems:['Charge router','Claim scrubber'],
+  cur:{wt:1,pt:15,ca:82},fut:{wt:0.25,pt:8,ca:92},
+  pains:['Charges are missed or late in procedural areas','Scrubber edits are worked manually one at a time'],
+  measure:'Final coded to claim released; edit counts by type.',
+  lever:{type:'Analytics',title:'Charge capture anomaly detection',desc:'Compare documented services to charges by department and flag likely missed or duplicate charges before the claim is released.',stack:'Anomaly detection on charge and order data (Databricks ML); exceptions routed to department work queues',kpi:'Clean claim rate; charge lag days',effort:'M',readiness:'High'}},
+ {id:'adjud',name:'Claim submission & adjudication',owner:'Payer',systems:['Clearinghouse','837 / 835'],
+  cur:{wt:18,pt:5,ca:88},fut:{wt:15,pt:5,ca:94},
+  pains:['About 12% of claims are denied on first submission','Payer-specific rules change without notice'],
+  measure:'Claim submitted to 835 remittance received.',
+  lever:{type:'AI',title:'Pre-submission denial prediction',desc:'Score each claim for denial risk using historical remittance data, and route high-risk claims for correction before submission.',stack:'Denial-risk model trained on 837/835 history (Databricks ML); scores attached in the clearinghouse workflow',kpi:'Initial denial rate',effort:'M',readiness:'High'}},
+ {id:'denial',name:'Denial management & posting',owner:'PFS / denials team',systems:['Denial WQ','Payment posting'],
+  cur:{wt:12,pt:35,ca:70},fut:{wt:6,pt:20,ca:85},
+  pains:['Appeals are drafted manually from chart review','Root causes are not fed back to front-end teams'],
+  measure:'Denial received to appeal filed to resolved; posting lag.',
+  lever:{type:'AI',title:'Denial root-cause analytics and appeal drafting',desc:'Classify denials by root cause and owning department, and draft appeal letters with supporting documentation for staff review.',stack:'Denial analytics on remittance data; LLM appeal drafting on Amazon Bedrock with chart citations',kpi:'Overturn rate; days to resolve',effort:'M',readiness:'Medium'}}
+ ]},
+{id:'trials',tab:'Clinical Research',name:'Clinical Trial Activation',
+ scope:'Industry-sponsored interventional trials, from protocol receipt to open to accrual.',
+ wtUnit:'d',ptUnit:'h',ltUnit:'d',sumUnit:'d',
+ supplier:{name:'Sponsors & CROs',note:'Protocol, budget and contract templates'},
+ customer:{name:'PI & study team',note:'~140 new industry trials / year'},
+ control:{name:'Clinical Research Office',note:'CTMS milestone tracking · weekly activation huddle'},
+ insight:'Contracting and IRB queues dominate activation time, and they often run in sequence when they could run in parallel. Parallel review is a process change that needs no new technology; AI then shortens review work inside each queue.',
+ steps:[
+ {id:'feas',name:'Feasibility & PI review',owner:'PI / research office',systems:['CTMS','Cohort discovery'],
+  cur:{wt:7,pt:6,ca:70},fut:{wt:3,pt:3,ca:85},
+  pains:['Enrollment estimates rely on PI recall rather than data','Low-accruing trials are activated and later closed'],
+  measure:'Protocol received to feasibility approved (CTMS milestones).',
+  lever:{type:'AI',title:'EHR cohort discovery from eligibility criteria',desc:'Translate inclusion and exclusion criteria into queries against the research data warehouse to estimate eligible patients per year before committing.',stack:'LLM criteria-to-query translation over an OMOP CDM on Databricks; de-identified counts returned to the PI',kpi:'Share of activated trials meeting accrual target',effort:'M',readiness:'Medium'}},
+ {id:'budget',name:'Budget & coverage analysis',owner:'Research finance',systems:['CTMS','Chargemaster'],
+  cur:{wt:14,pt:8,ca:65},fut:{wt:6,pt:4,ca:85},
+  pains:['The Medicare coverage analysis is built line by line from the schedule of events','Budget counteroffers cycle back and forth with the sponsor'],
+  measure:'Budget draft to sponsor agreement timestamps.',
+  lever:{type:'AI',title:'Automated coverage analysis draft',desc:'Extract the schedule of events from the protocol and draft billing designations (routine cost versus sponsor-paid) with chargemaster pricing for analyst review.',stack:'Protocol extraction with Amazon Textract and Bedrock; pricing joined from chargemaster tables',kpi:'Days to final budget',effort:'M',readiness:'Medium'}},
+ {id:'cta',name:'Contract negotiation',owner:'Office of sponsored research',systems:['Contract management'],
+  cur:{wt:35,pt:10,ca:60},fut:{wt:18,pt:6,ca:80},
+  pains:['Each sponsor template is negotiated from scratch','Contract work starts only after the budget is final'],
+  measure:'CTA received to fully executed.',
+  lever:{type:'AI',title:'Playbook-based contract redlining',desc:'Compare sponsor clauses to the institution’s negotiation playbook and fallback positions, and propose redlines for contract staff to accept or edit.',stack:'LLM clause comparison with retrieval over the playbook and prior executed CTAs',kpi:'CTA cycle time (days)',effort:'M',readiness:'High'}},
+ {id:'irb',name:'IRB review',owner:'IRB',systems:['eIRB'],
+  cur:{wt:25,pt:6,ca:70},fut:{wt:14,pt:4,ca:88},
+  pains:['About 30% of submissions are returned for missing or inconsistent items','Consent forms exceed the target reading level'],
+  measure:'Submission to approval; returns for modification.',
+  lever:{type:'Process',title:'Parallel review with pre-submission checks',desc:'Start IRB, budget and contract work in parallel after feasibility, and run completeness and consent readability checks before submission.',stack:'Submission checklist automation; LLM consent readability review; milestones tracked in CTMS',kpi:'Submission to approval; return rate',effort:'L',readiness:'High'}},
+ {id:'build',name:'Ancillary & EHR build',owner:'Pharmacy / lab / research IT',systems:['EHR research build','IDS pharmacy'],
+  cur:{wt:12,pt:12,ca:75},fut:{wt:5,pt:7,ca:88},
+  pains:['Study calendars and order sets are built manually','Ancillary reviews queue behind clinical work'],
+  measure:'IRB approval to build complete sign-off.',
+  lever:{type:'Automation',title:'Protocol-to-build templates',desc:'Generate draft study calendars and research order sets from the structured schedule of events for analyst validation.',stack:'Structured protocol data from the coverage analysis step; build templates loaded to the EHR test environment',kpi:'Build cycle time',effort:'M',readiness:'Medium'}},
+ {id:'siv',name:'Site initiation & activation',owner:'Study team',systems:['CTMS','Sponsor portals'],
+  cur:{wt:10,pt:4,ca:85},fut:{wt:6,pt:3,ca:92},
+  pains:['Site initiation visit timing depends on sponsor availability','The first patient is enrolled weeks after activation'],
+  measure:'Build complete to site initiation visit to open to accrual.',
+  lever:{type:'Analytics',title:'Pre-screening lists at activation',desc:'Deliver a daily list of potentially eligible patients with upcoming visits so enrollment can start on activation day.',stack:'Daily eligibility matching job on the research data warehouse; lists delivered to coordinators',kpi:'Activation to first patient enrolled',effort:'L',readiness:'Medium'}}
+ ]}
+];
+
+const KEY='amc-vsm-edits-v1';
+let ov={};
+try{ov=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){ov={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(ov))}catch(e){}}
+const state={stream:'referral',mode:'cur',sel:0};
+const h0=(location.hash||'').slice(1);
+if(STREAMS.some(s=>s.id===h0))state.stream=h0;
+
+const $=q=>document.querySelector(q);
+const S=()=>STREAMS.find(s=>s.id===state.stream);
+function val(s,st,m,f){const o=ov[s.id]&&ov[s.id][st.id]&&ov[s.id][st.id][m];if(o&&o[f]!=null&&isFinite(o[f]))return o[f];return st[m][f]}
+const wtM=(s,st,m)=>val(s,st,m,'wt')*U[s.wtUnit];
+const ptM=(s,st,m)=>val(s,st,m,'pt')*U[s.ptUnit];
+function stats(s,m){let wt=0,pt=0,fpy=1;s.steps.forEach(st=>{wt+=wtM(s,st,m);pt+=ptM(s,st,m);fpy*=val(s,st,m,'ca')/100});const lt=wt+pt;return{wt,pt,lt,pce:lt?pt/lt:0,fpy}}
+function n(x,d=1){const p=Math.pow(10,d);return (Math.round(x*p)/p).toLocaleString('en-US',{maximumFractionDigits:d})}
+const inU=(min,u,d=1)=>n(min/U[u],d)+' '+UL[u];
+function auto(min){if(min<90)return n(min,0)+' min';if(min<2880)return n(min/60)+' h';return n(min/1440)+' d'}
+function pct(x){const p=x*100;return (p<1?n(p,2):n(p,1))+'%'}
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function relChg(a,b){if(!a)return{t:'–',c:''};const c=(b-a)/a*100;const r=Math.round(c);return{t:(r>0?'+':r<0?'−':'')+Math.abs(r)+'%',c:r<0?'good':r>0?'bad':''}}
+function ptsChg(a,b,higherGood=true){const d=b-a;const r=Math.round(d*10)/10;const good=higherGood?r>0:r<0;return{t:(r>0?'+':r<0?'−':'')+n(Math.abs(r))+' pts',c:r===0?'':good?'good':'bad'}}
+
+function burst(){let p=[];for(let i=0;i<20;i++){const a=Math.PI*2*i/20-Math.PI/2,r=i%2?8:14;p.push((15+r*Math.cos(a)).toFixed(1)+','+(15+r*Math.sin(a)).toFixed(1))}return '<svg viewBox="0 0 30 30" aria-hidden="true"><polygon points="'+p.join(' ')+'"/></svg>'}
+const BURST=burst();
+const CHECK='<svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="11"/><path d="M10 15.5l3.4 3.4 6.6-7"/></svg>';
+const TRI='<svg class="tri" viewBox="0 0 38 34" aria-hidden="true"><polygon points="19,2 36,32 2,32"/><text x="19" y="28.5" text-anchor="middle">I</text></svg>';
+
+function renderTabs(){
+  $('#stream-tabs').innerHTML=STREAMS.map(s=>`<button type="button" role="tab" data-s="${s.id}" aria-selected="${s.id===state.stream}">${esc(s.tab)}</button>`).join('');
+  document.querySelectorAll('#state-toggle button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===state.mode));
+}
+
+function renderHeader(){const s=S();$('#vs-name').textContent=s.name;$('#vs-scope').textContent=s.scope;$('#map-title').textContent=(state.mode==='cur'?'Current':'Future')+'-state map';
+  $('#lg-burst').innerHTML=state.mode==='cur'?'<span class="burst" style="position:static;width:22px;height:22px">'+BURST+'</span>Improvement lever':'<span class="burst" style="position:static;width:22px;height:22px">'+CHECK+'</span>Lever applied';
+  $('#lg-burst').querySelector('svg').style.cssText='width:22px;height:22px';
+}
+
+function renderMetrics(){
+  const s=S(),c=stats(s,'cur'),f=stats(s,'fut'),m=state.mode,a=m==='cur'?c:f,o=m==='cur'?f:c;
+  const oName=m==='cur'?'Future':'Current';
+  const lt=relChg(c.lt,f.lt),pt=relChg(c.pt,f.pt),pce=ptsChg(c.pce*100,f.pce*100),fpy=ptsChg(c.fpy*100,f.fpy*100);
+  const sub=(oval,ch)=>m==='cur'?`${oName}: ${oval} <span class="${ch.c}">(${ch.t})</span>`:`${oName}: ${oval} · <span class="${ch.c}">${ch.t}</span>`;
+  const tiles=[
+    ['Lead time',inU(a.lt,s.ltUnit),sub(inU(o.lt,s.ltUnit),lt),'Elapsed time, end to end'],
+    ['Value-added time',auto(a.pt),sub(auto(o.pt),pt),'Sum of process times'],
+    ['Process cycle efficiency',pct(a.pce),sub(pct(o.pce),pce),'Value-added time ÷ lead time'],
+    ['Rolled first-pass yield',pct(a.fpy),sub(pct(o.fpy),fpy),'Product of %C&A across steps']
+  ];
+  $('#metrics').innerHTML=tiles.map(t=>`<div class="metric"><div class="m-label">${t[0]}</div><div class="m-val">${t[1]}</div><div class="m-sub">${t[2]}</div><div class="m-help">${esc(t[3])}</div></div>`).join('');
+}
+
+let lastLayout=null;
+function layoutFor(){const w=$('#map-scroll').clientWidth||window.innerWidth;return w>=S().steps.length*150+230?'h':'v'}
+const tri=cls=>`<svg class="tri ${cls}" viewBox="0 0 38 34" aria-hidden="true"><polygon points="19,2 36,32 2,32"/><text x="19" y="28.5" text-anchor="middle">I</text></svg>`;
+function renderMap(){
+  const s=S(),m=state.mode,N=s.steps.length,map=$('#map'),L=layoutFor();lastLayout=L;
+  map.className='map '+(L==='h'?'map-h':'map-v');
+  let big=0,bigV=-1;s.steps.forEach((st,i)=>{const w=wtM(s,st,m);if(w>bigV){bigV=w;big=i}});
+  const a=stats(s,m);
+  const was=st=>{if(m!=='fut')return '';const cw=val(s,st,'cur','wt');return cw!==val(s,st,m,'wt')?`<span class="w-was">${n(cw,2)} ${UL[s.wtUnit]}</span>`:''};
+  const deltas=st=>{let dpt='',dca='';if(m==='fut'){const r=relChg(val(s,st,'cur','pt'),val(s,st,m,'pt'));if(r.c)dpt=`<em class="${r.c==='bad'?'bad':''}">${r.t}</em>`;const q=ptsChg(val(s,st,'cur','ca'),val(s,st,m,'ca'));if(q.c)dca=`<em class="${q.c==='bad'?'bad':''}">${q.t.replace(' pts','')}</em>`}return{dpt,dca}};
+  const chips=st=>st.systems.map(x=>`<span class="chip">${esc(x)}</span>`).join('');
+  const head=(st,i)=>`<span class="p-top"><span class="p-num">${String(i+1).padStart(2,'0')}</span><span class="p-name">${esc(st.name)}</span></span><span class="p-own">${esc(st.owner)}</span>`;
+  const mark=`<span class="burst">${m==='cur'?BURST:CHECK}</span>`;
+  const ext=(k,o)=>`<span class="ext-k">${k}</span><b>${esc(o.name)}</b><span>${esc(o.note)}</span>`;
+  let h='';
+  if(L==='h'){
+    map.style.gridTemplateColumns=`88px repeat(${N}, minmax(44px,.42fr) minmax(0,1fr)) 14px 96px`;
+    const endC=2+2*N,custC=3+2*N;
+    h+=`<div class="rl" style="grid-row:1;grid-column:1">Control</div><div class="rl" style="grid-row:2;grid-column:1">Information flow</div><div class="rl" style="grid-row:4;grid-column:1">Data box</div><div class="rl" style="grid-row:5;grid-column:1">Timeline</div>`;
+    h+=`<div class="lane" style="grid-row:1;grid-column:2/${endC}"><b>${esc(s.control.name)}</b><span>${esc(s.control.note)}</span></div>`;
+    h+=`<div class="ext" style="grid-row:3;grid-column:1;margin-right:4px"><div class="ext-body">${ext('Supplier',s.supplier)}</div></div>`;
+    s.steps.forEach((st,i)=>{
+      const wc=2+2*i,pc=3+2*i,sel=i===state.sel,wv=val(s,st,m,'wt'),pv=val(s,st,m,'pt'),ca=val(s,st,m,'ca'),d=deltas(st);
+      h+=`<div class="chips" style="grid-row:2;grid-column:${pc}">${chips(st)}</div>`;
+      h+=`<div class="wait${i===big?' is-max':''}" style="grid-row:3;grid-column:${wc}">${tri('')}<span class="w-lab">${n(wv,2)} ${UL[s.wtUnit]}</span>${was(st)}</div>`;
+      h+=`<button type="button" class="proc${sel?' sel':''}" data-i="${i}" aria-pressed="${sel}" title="${esc(st.lever.title)}" style="grid-row:3;grid-column:${pc}">${head(st,i)}${mark}</button>`;
+      h+=`<div class="dbox" style="grid-row:4;grid-column:${pc}"><div><span>P/T</span><b>${n(pv,2)} ${UL[s.ptUnit]}${d.dpt}</b></div><div><span>%C&amp;A</span><b>${n(ca)}%${d.dca}</b></div><div class="dtype"><i class="dot ${TYPES[st.lever.type]}"></i>${esc(st.lever.type)}</div></div>`;
+      h+=`<div class="lad lad-w" style="grid-row:5;grid-column:${wc}"><span>${n(wv,2)} ${UL[s.wtUnit]}</span></div>`;
+      h+=`<div class="lad lad-p${sel?' sel':''}" style="grid-row:5;grid-column:${pc}"><span>${n(pv,2)} ${UL[s.ptUnit]}</span></div>`;
+    });
+    h+=`<div class="wait" style="grid-row:3;grid-column:${endC};min-height:0"></div>`;
+    h+=`<div class="ext" style="grid-row:3;grid-column:${custC}"><div class="ext-body">${ext('Customer',s.customer)}</div></div>`;
+    h+=`<div class="lad lad-end" style="grid-row:5;grid-column:${endC}"></div>`;
+    h+=`<div class="lad-total" style="grid-row:4/6;grid-column:${custC}"><span>Lead time</span><b>${inU(a.lt,s.ltUnit)}</b><span>Value-added</span><b style="margin-bottom:0">${auto(a.pt)}</b></div>`;
+  }else{
+    map.style.gridTemplateColumns='';
+    h+=`<div class="lane"><b>${esc(s.control.name)}</b><span>${esc(s.control.note)}</span></div>`;
+    h+=`<div class="vrow"><div class="vrail vrail-a"></div><div class="vext">${ext('Supplier',s.supplier)}</div></div>`;
+    s.steps.forEach((st,i)=>{
+      const sel=i===state.sel,wv=val(s,st,m,'wt'),pv=val(s,st,m,'pt'),ca=val(s,st,m,'ca'),d=deltas(st);
+      h+=`<div class="vrow${i===big?' is-max':''}"><div class="vrail vrail-w">${tri('vtri')}</div><div class="vw-lab"><span class="vw-k">Queue${i===big?' · largest':''}</span><b>${n(wv,2)} ${UL[s.wtUnit]}</b>${was(st)}</div></div>`;
+      h+=`<div class="vrow"><div class="vrail vrail-p"><span>${n(pv,2)} ${UL[s.ptUnit]}</span></div><button type="button" class="proc vproc${sel?' sel':''}" data-i="${i}" aria-pressed="${sel}" title="${esc(st.lever.title)}">${head(st,i)}<span class="vchips">${chips(st)}</span><span class="vdata"><span>P/T <b>${n(pv,2)} ${UL[s.ptUnit]}</b>${d.dpt}</span><span>%C&amp;A <b>${n(ca)}%</b>${d.dca}</span><span class="vtype"><i class="dot ${TYPES[st.lever.type]}"></i>${esc(st.lever.type)} lever</span></span>${mark}</button></div>`;
+    });
+    h+=`<div class="vrow"><div class="vrail vrail-a vrail-end"></div><div class="vext">${ext('Customer',s.customer)}</div></div>`;
+    h+=`<div class="vrow"><div></div><div class="vtotal"><div><span>Lead time</span><b>${inU(a.lt,s.ltUnit)}</b></div><div><span>Value-added</span><b>${auto(a.pt)}</b></div><div><span>Cycle efficiency</span><b>${pct(a.pce)}</b></div></div></div>`;
+  }
+  map.innerHTML=h;
+  const bi=s.steps[big],share=wtM(s,bi,m)/a.lt*100;
+  $('#insight').innerHTML=`<strong>${m==='cur'?'Current':'Future'} state:</strong> the largest queue sits before <strong>${esc(bi.name.toLowerCase())}</strong> at ${n(val(s,bi,m,'wt'),2)} ${UL[s.wtUnit]}, ${n(share,0)}% of lead time. Value-added work is ${pct(a.pce)} of elapsed time. ${esc(s.insight)}`;
+}
+
+function detailChanges(){
+  const s=S(),st=s.steps[state.sel];
+  const set=(id,o)=>{const el=document.getElementById(id);if(el){el.textContent=o.t;el.className='chg '+o.c}};
+  set('chg-wt',relChg(val(s,st,'cur','wt'),val(s,st,'fut','wt')));
+  set('chg-pt',relChg(val(s,st,'cur','pt'),val(s,st,'fut','pt')));
+  set('chg-ca',ptsChg(val(s,st,'cur','ca'),val(s,st,'fut','ca')));
+  const lt=stats(s,state.mode).lt,share=(wtM(s,st,state.mode)+ptM(s,st,state.mode))/lt*100;
+  const el=$('#share');if(el)el.textContent=n(share,0)+'% of '+(state.mode==='cur'?'current':'future')+' lead time';
+  const rb=$('#reset-step');if(rb)rb.disabled=!(ov[s.id]&&ov[s.id][st.id]);
+}
+
+function renderDetail(){
+  const s=S(),st=s.steps[state.sel],L=st.lever,N=s.steps.length;
+  const inp=(m,f,u)=>`<input type="number" id="in-${m}-${f}" data-m="${m}" data-f="${f}" min="0" ${f==='ca'?'max="100" step="1"':`step="${STEP[u]}"`} value="${val(s,st,m,f)}" aria-label="${m==='cur'?'Current':'Future'} ${f}">`;
+  $('#detail').innerHTML=`
+  <div>
+    <h4>Step ${state.sel+1} of ${N}</h4>
+    <h3>${esc(st.name)}</h3>
+    <p class="meta">${esc(st.owner)} · <span id="share"></span></p>
+  </div>
+  <div class="sys">${st.systems.map(x=>`<span class="chip">${esc(x)}</span>`).join('')}</div>
+  <div>
+    <div class="edit-wrap"><table class="edit">
+      <thead><tr><th>Metric</th><th>Current</th><th>Future</th><th>Change</th></tr></thead>
+      <tbody>
+        <tr><th>Wait before step (${UL[s.wtUnit]})</th><td>${inp('cur','wt',s.wtUnit)}</td><td>${inp('fut','wt',s.wtUnit)}</td><td><span id="chg-wt"></span></td></tr>
+        <tr><th>Process time (${UL[s.ptUnit]})</th><td>${inp('cur','pt',s.ptUnit)}</td><td>${inp('fut','pt',s.ptUnit)}</td><td><span id="chg-pt"></span></td></tr>
+        <tr><th>%C&amp;A</th><td>${inp('cur','ca')}</td><td>${inp('fut','ca')}</td><td><span id="chg-ca"></span></td></tr>
+      </tbody></table></div>
+    <div class="row-actions" style="margin-top:10px"><button class="btn" type="button" id="reset-step">Reset step</button></div>
+  </div>
+  <div><h4>Current-state pain points</h4><ul class="pains">${st.pains.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
+  <div class="lever">
+    <div class="lever-top"><span class="tag"><i class="dot ${TYPES[L.type]}"></i>${esc(L.type)} lever</span></div>
+    <b class="lt">${esc(L.title)}</b>
+    <p>${esc(L.desc)}</p>
+    <dl>
+      <dt>Enabling stack</dt><dd>${esc(L.stack)}</dd>
+      <dt>Lead KPI</dt><dd>${esc(L.kpi)}</dd>
+      <dt>Effort</dt><dd>${EFFORT[L.effort]}</dd>
+      <dt>Data readiness</dt><dd>${esc(L.readiness)}</dd>
+    </dl>
+  </div>
+  <p class="measure"><b>Baseline measurement:</b> ${esc(st.measure)}</p>`;
+  detailChanges();
+}
+
+function savedFor(s,st){return (wtM(s,st,'cur')+ptM(s,st,'cur'))-(wtM(s,st,'fut')+ptM(s,st,'fut'))}
+function renderOpps(){
+  const s=S(),rows=s.steps.map((st,i)=>({st,i,sv:savedFor(s,st)})).sort((a,b)=>b.sv-a.sv);
+  const max=Math.max(...rows.map(r=>r.sv),1),c=stats(s,'cur'),f=stats(s,'fut');
+  const d=s.sumUnit==='min'?0:(s.sumUnit==='d'?1:1);
+  $('#opp-table').innerHTML=`<thead><tr><th>Lever</th><th>Type</th><th>Lead time removed</th><th>Effort</th><th>Data</th></tr></thead>
+  <tbody>${rows.map(r=>`<tr data-i="${r.i}" tabindex="0" class="${r.i===state.sel?'sel':''}"><td class="lv"><b>${esc(r.st.lever.title)}</b><span>${String(r.i+1).padStart(2,'0')} · ${esc(r.st.name)}</span></td><td class="ty"><span><i class="dot ${TYPES[r.st.lever.type]}"></i>${esc(r.st.lever.type)}</span></td><td class="sv"><b>${inU(r.sv,s.sumUnit,s.sumUnit==='d'?2:d)}</b><div class="bar" style="width:${Math.max(0,r.sv/max*100)}%"></div></td><td><span class="pill">${EFFORT[r.st.lever.effort]}</span></td><td><span class="pill">${esc(r.st.lever.readiness)}</span></td></tr>`).join('')}</tbody>
+  <tfoot><tr><td colspan="5">Total: ${inU(c.lt,s.ltUnit)} → ${inU(f.lt,s.ltUnit)} (${relChg(c.lt,f.lt).t} lead time)</td></tr></tfoot>`;
+  $('#reset-stream').disabled=!ov[s.id];
+}
+
+function renderAll(){renderTabs();renderHeader();renderMetrics();renderMap();renderDetail();renderOpps()}
+function refreshAfterEdit(){renderMetrics();renderMap();renderOpps();detailChanges()}
+
+$('#stream-tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-s]');if(!b)return;state.stream=b.dataset.s;state.sel=0;try{history.replaceState(null,'','#'+state.stream)}catch(_){}renderAll()});
+$('#state-toggle').addEventListener('click',e=>{const b=e.target.closest('button[data-mode]');if(!b)return;state.mode=b.dataset.mode;renderTabs();renderHeader();renderMetrics();renderMap();detailChanges()});
+$('#map').addEventListener('click',e=>{const b=e.target.closest('.proc');if(!b)return;state.sel=+b.dataset.i;renderMap();renderDetail();renderOpps()});
+function pickRow(tr){state.sel=+tr.dataset.i;renderMap();renderDetail();renderOpps();$('#detail').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'})}
+$('#opp-table').addEventListener('click',e=>{const tr=e.target.closest('tbody tr');if(tr)pickRow(tr)});
+$('#opp-table').addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const tr=e.target.closest('tbody tr');if(tr){e.preventDefault();pickRow(tr)}});
+$('#detail').addEventListener('input',e=>{
+  const t=e.target;if(!t.matches('input[data-m]'))return;
+  const s=S(),st=s.steps[state.sel],m=t.dataset.m,f=t.dataset.f;let v=parseFloat(t.value);
+  ov[s.id]=ov[s.id]||{};ov[s.id][st.id]=ov[s.id][st.id]||{};ov[s.id][st.id][m]=ov[s.id][st.id][m]||{};
+  if(!isFinite(v)||v<0){delete ov[s.id][st.id][m][f]}else{if(f==='ca')v=Math.min(100,v);if(v===st[m][f])delete ov[s.id][st.id][m][f];else ov[s.id][st.id][m][f]=v}
+  ['cur','fut'].forEach(k=>{if(ov[s.id][st.id][k]&&!Object.keys(ov[s.id][st.id][k]).length)delete ov[s.id][st.id][k]});
+  if(!Object.keys(ov[s.id][st.id]).length)delete ov[s.id][st.id];
+  if(!Object.keys(ov[s.id]).length)delete ov[s.id];
+  save();refreshAfterEdit();
+});
+$('#detail').addEventListener('click',e=>{if(e.target.id!=='reset-step')return;const s=S(),st=s.steps[state.sel];if(ov[s.id]){delete ov[s.id][st.id];if(!Object.keys(ov[s.id]).length)delete ov[s.id]}save();renderMetrics();renderMap();renderDetail();renderOpps()});
+$('#reset-stream').addEventListener('click',()=>{delete ov[S().id];save();renderAll()});
+$('#copy-csv').addEventListener('click',()=>{
+  const s=S(),q=x=>'"'+String(x).replace(/"/g,'""')+'"';
+  const head=['Value stream','Step','Owner',`Current wait (${UL[s.wtUnit]})`,`Current process (${UL[s.ptUnit]})`,'Current %C&A',`Future wait (${UL[s.wtUnit]})`,`Future process (${UL[s.ptUnit]})`,'Future %C&A','Lever','Lever type','Effort','Data readiness','Lead KPI'];
+  const lines=[head.map(q).join(',')].concat(s.steps.map(st=>[s.name,st.name,st.owner,val(s,st,'cur','wt'),val(s,st,'cur','pt'),val(s,st,'cur','ca'),val(s,st,'fut','wt'),val(s,st,'fut','pt'),val(s,st,'fut','ca'),st.lever.title,st.lever.type,EFFORT[st.lever.effort],st.lever.readiness,st.lever.kpi].map(q).join(',')));
+  const csv=lines.join('\n'),status=$('#copy-status'),ta=$('#csv-fallback');
+  const fallback=()=>{ta.value=csv;ta.hidden=false;ta.focus();ta.select();status.textContent='Select all and copy the text below'};
+  try{navigator.clipboard.writeText(csv).then(()=>{ta.hidden=true;status.textContent='Copied '+s.steps.length+' rows';setTimeout(()=>status.textContent='',2500)},fallback)}catch(_){fallback()}
+});
+const relayout=()=>{if(layoutFor()!==lastLayout)renderMap()};
+try{new ResizeObserver(relayout).observe($('#map-scroll'))}catch(_){window.addEventListener('resize',relayout)}
+renderAll();
+</script>
+
+</body></html>
